@@ -1,0 +1,37 @@
+# Website Environment Variables Template
+# Copy this file to .env.local and fill in your values
+
+# API Configuration
+VITE_API_BASE_URL=http://localhost:3000/api/v1
+
+# Application Configuration
+VITE_APP_NAME=YouPhoria
+VITE_APP_VERSION=1.0.0
+VITE_APP_DESCRIPTION=YouPhoria Website
+
+# Environment
+VITE_NODE_ENV=development
+
+# Feature Flags
+VITE_ENABLE_ANALYTICS=false
+VITE_ENABLE_CHAT=true
+VITE_ENABLE_NOTIFICATIONS=true
+
+# External Services
+VITE_GOOGLE_ANALYTICS_ID=your_ga_id
+VITE_SENTRY_DSN=your_sentry_dsn
+
+# Social Media Links
+VITE_SOCIAL_TWITTER=https://twitter.com/youphoria
+VITE_SOCIAL_FACEBOOK=https://facebook.com/youphoria
+VITE_SOCIAL_INSTAGRAM=https://instagram.com/youphoria
+
+# Contact Information
+VITE_CONTACT_EMAIL=contact@youphoria.com
+VITE_SUPPORT_EMAIL=support@youphoria.com
+
+# CDN Configuration
+VITE_CDN_URL=https://cdn.youphoria.com
+
+# Debug Mode
+VITE_DEBUG_MODE=false
