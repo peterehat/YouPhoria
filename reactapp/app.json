@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "reactapp",
-    "slug": "reactapp",
+    "name": "YouPhoria Wellness",
+    "slug": "youphoria",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,16 +12,34 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.youphoria.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSHealthShareUsageDescription": "YouPhoria needs access to your health data to provide personalized wellness insights and recommendations.",
+        "NSHealthUpdateUsageDescription": "YouPhoria needs permission to write health data to help you track your wellness journey."
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.youphoria.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "db39b5f3-3867-4850-a19a-3dbb79861037"
+      }
     }
   }
 }
