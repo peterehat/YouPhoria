@@ -1,4 +1,11 @@
+import { Platform, NativeModules } from 'react-native';
 import AppleHealthKit, { HealthValue, HealthKitPermissions } from 'react-native-health';
+
+// Debug: Check if native module is available
+console.log('All NativeModules:', Object.keys(NativeModules));
+console.log('NativeModules.AppleHealthKit:', NativeModules.AppleHealthKit);
+console.log('NativeModules.RCTAppleHealthKit:', NativeModules.RCTAppleHealthKit);
+console.log('HealthKit Available Methods:', AppleHealthKit);
 
 // Define all available HealthKit permissions
 const permissions = {
@@ -106,12 +113,21 @@ class HealthKitService {
 
   // Initialize HealthKit
   async initialize() {
+    if (Platform.OS !== 'ios') {
+      throw new Error('HealthKit is only available on iOS devices');
+    }
+
+    // Check if native module is loaded
+    if (!AppleHealthKit || !AppleHealthKit.initHealthKit) {
+      throw new Error('HealthKit native module is not available. Please ensure react-native-health is properly linked.');
+    }
+
     return new Promise((resolve, reject) => {
       AppleHealthKit.initHealthKit(permissions, (error) => {
         if (error) {
           console.log('HealthKit initialization error:', error);
           this.isInitialized = false;
-          reject(error);
+          reject(new Error(`HealthKit initialization failed: ${error}`));
         } else {
           console.log('HealthKit initialized successfully');
           this.isInitialized = true;
@@ -124,11 +140,19 @@ class HealthKitService {
   // Check if HealthKit is available on the device
   isAvailable() {
     return new Promise((resolve) => {
+      // Check if native module is loaded
+      if (!AppleHealthKit || !AppleHealthKit.isAvailable) {
+        console.log('HealthKit native module is not loaded');
+        resolve(false);
+        return;
+      }
+
       AppleHealthKit.isAvailable((error, results) => {
         if (error) {
           console.log('HealthKit availability check error:', error);
           resolve(false);
         } else {
+          console.log('HealthKit availability:', results);
           resolve(results);
         }
       });
@@ -138,11 +162,20 @@ class HealthKitService {
   // Request permissions
   async requestPermissions() {
     try {
+      if (Platform.OS !== 'ios') {
+        throw new Error('HealthKit is only available on iOS devices');
+      }
+
+      const isAvailable = await this.isAvailable();
+      if (!isAvailable) {
+        throw new Error('HealthKit is not available on this device');
+      }
+
       await this.initialize();
       return true;
     } catch (error) {
       console.log('Failed to request HealthKit permissions:', error);
-      return false;
+      throw error;
     }
   }
 
@@ -266,6 +299,44 @@ class HealthKitService {
         }
       });
     });
+  }
+
+  // Get comprehensive health data for display
+  async getHealthData() {
+    if (!this.isInitialized) {
+      throw new Error('HealthKit not initialized');
+    }
+
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    try {
+      const [steps, heartRate, sleep, workouts, weight, bloodPressure] = await Promise.allSettled([
+        this.getSteps(oneWeekAgo, now),
+        this.getHeartRate(oneWeekAgo, now),
+        this.getSleepData(oneWeekAgo, now),
+        this.getWorkouts(oneWeekAgo, now),
+        this.getWeight(oneWeekAgo, now),
+        this.getBloodPressure(oneWeekAgo, now),
+      ]);
+
+      return {
+        steps: steps.status === 'fulfilled' ? steps.value : { error: 'Failed to fetch' },
+        heartRate: heartRate.status === 'fulfilled' ? heartRate.value : { error: 'Failed to fetch' },
+        sleep: sleep.status === 'fulfilled' ? sleep.value : { error: 'Failed to fetch' },
+        workouts: workouts.status === 'fulfilled' ? workouts.value : { error: 'Failed to fetch' },
+        weight: weight.status === 'fulfilled' ? weight.value : { error: 'Failed to fetch' },
+        bloodPressure: bloodPressure.status === 'fulfilled' ? bloodPressure.value : { error: 'Failed to fetch' },
+        permissions: {
+          read: permissions.permissions.read,
+          write: permissions.permissions.write,
+        },
+        lastUpdated: now.toISOString(),
+      };
+    } catch (error) {
+      console.error('Error fetching health data:', error);
+      throw error;
+    }
   }
 
   // Disconnect/revoke access (not directly possible with HealthKit, but we can clear our local state)

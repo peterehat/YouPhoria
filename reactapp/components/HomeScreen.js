@@ -68,14 +68,14 @@ export default function HomeScreen({ onNavigateToApps }) {
         >
           {/* Center Card */}
           <View style={styles.centerContainer}>
-            <BlurView intensity={60} tint="light" style={styles.cardBlur}>
+            <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.cardBlur}>
               <View style={styles.card}>
                 <View style={styles.cardContent}>
                   <Text style={styles.title}>You-I</Text>
                   <Text style={styles.subtitle}>Ask me wellness questions.</Text>
                   
                   <View style={styles.inputContainer}>
-                    <BlurView intensity={50} tint="light" style={styles.inputBlur}>
+                    <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.inputBlur}>
                       <TextInput
                         style={styles.input}
                         placeholder="Type your health question here..."
@@ -101,7 +101,7 @@ export default function HomeScreen({ onNavigateToApps }) {
 
           {/* Bottom Connect Section */}
           <View style={styles.connectSection}>
-            <BlurView intensity={60} tint="light" style={styles.connectBadge}>
+            <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.connectBadge}>
               <Text style={styles.connectText}>CONNECT</Text>
             </BlurView>
             
@@ -156,24 +156,25 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   avatarBlur: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: '#eaff61',
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    // iOS shadow
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    // iOS 26 glass UI shadow
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 15,
+      height: 8,
     },
-    shadowOpacity: 0.5,
-    shadowRadius: 30,
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
     // Android shadow
-    elevation: 15,
+    elevation: 8,
   },
   avatarText: {
     color: '#fff',
@@ -194,25 +195,27 @@ const styles = StyleSheet.create({
     marginBottom: 70,
   },
   cardBlur: {
-    borderRadius: 40,
+    borderRadius: 24,
     overflow: 'hidden',
     width: '100%',
     maxWidth: 400,
-    // iOS shadow
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    // iOS 26 glass UI shadow
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 25,
+      height: 12,
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 50,
+    shadowOpacity: 0.15,
+    shadowRadius: 32,
     // Android shadow
-    elevation: 20,
+    elevation: 12,
   },
   card: {
-    backgroundColor: 'rgba(229, 231, 235, 0.3)',
-    borderWidth: 1,
-    borderColor: 'rgba(209, 213, 219, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   cardContent: {
     padding: 32,
@@ -235,18 +238,18 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   inputBlur: {
-    borderRadius: 12,
+    borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(209, 213, 219, 0.3)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   input: {
-    height: 48,
-    paddingHorizontal: 16,
+    height: 52,
+    paddingHorizontal: 20,
     textAlign: 'center',
     fontSize: 14,
     color: '#1f2937',
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   button: {
     height: 48,
@@ -267,29 +270,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   connectBadge: {
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(209, 213, 219, 0.2)',
-    // iOS shadow
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    // iOS 26 glass UI shadow
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 25,
+      height: 8,
     },
-    shadowOpacity: 0.4,
-    shadowRadius: 50,
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
     // Android shadow
-    elevation: 10,
+    elevation: 8,
   },
   connectText: {
     fontSize: 18,
     fontWeight: '500',
     color: '#1f2937',
     paddingHorizontal: 24,
-    paddingVertical: 2,
-    backgroundColor: 'rgba(229, 231, 235, 0.3)',
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   buttonsRow: {
     flexDirection: 'row',

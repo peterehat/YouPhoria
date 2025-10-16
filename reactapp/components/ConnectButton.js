@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 
 export default function ConnectButton({ icon, label, onPress }) {
   return (
@@ -8,42 +9,50 @@ export default function ConnectButton({ icon, label, onPress }) {
       onPress={onPress}
       activeOpacity={0.8}
     >
-      <View style={styles.iconContainer}>
-        {icon}
-      </View>
-      <Text style={styles.label}>{label}</Text>
+      <BlurView intensity={100} tint="systemUltraThinMaterialDark" style={styles.blurContainer}>
+        <View style={styles.iconContainer}>
+          {icon}
+        </View>
+        <Text style={styles.label}>{label}</Text>
+      </BlurView>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: 'rgba(31, 41, 55, 0.8)',
-    borderWidth: 5,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden',
+    borderWidth: 3,
     borderColor: '#eaff61',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // iOS shadow
+    // iOS 26 glass UI shadow
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 15,
+      height: 8,
     },
-    shadowOpacity: 0.5,
-    shadowRadius: 30,
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
     // Android shadow
-    elevation: 15,
+    elevation: 8,
+  },
+  blurContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   iconContainer: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   label: {
-    color: '#fff',
-    fontSize: 8,
-    fontWeight: '500',
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: '600',
     letterSpacing: 0.5,
   },
 });
