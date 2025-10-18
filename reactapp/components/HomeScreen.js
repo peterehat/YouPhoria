@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,17 +10,148 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  Animated,
+  Easing,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import ConnectButton from './ConnectButton';
 
-export default function HomeScreen({ onNavigateToApps }) {
+export default function HomeScreen({ onNavigateToApps, onNavigateToInsights }) {
   const [healthQuestion, setHealthQuestion] = useState('');
+  const [showResponse, setShowResponse] = useState(false);
+  const [responseText, setResponseText] = useState('');
+  
+  // Animation values
+  const buttonOpacity = useRef(new Animated.Value(1)).current;
+  const insightsButtonOpacity = useRef(new Animated.Value(0)).current;
+  const inputHeight = useRef(new Animated.Value(52)).current;
+  const responseOpacity = useRef(new Animated.Value(0)).current;
+  const containerTop = useRef(new Animated.Value(120)).current; // Start position
+  const cardMaxHeight = useRef(new Animated.Value(300)).current; // Card max height for animation
+  const buttonContainerHeight = useRef(new Animated.Value(56)).current; // Button container height (48px button + 8px margin)
+  const [contentHeight, setContentHeight] = useState(0);
 
   const handleGetHealthGuidance = () => {
-    console.log('Get health guidance for:', healthQuestion);
-    // Add your navigation or API call logic here
+    if (healthQuestion.trim()) {
+      // Simulate getting a response
+      const mockResponse = "Based on your question, here's some initial guidance. For more detailed insights, you can view the full analysis.";
+      setResponseText(mockResponse);
+      setShowResponse(true);
+      
+      // Animate button fade out and collapse
+      Animated.timing(buttonOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+      
+      Animated.timing(buttonContainerHeight, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+      
+      // Animate container move up
+      Animated.timing(containerTop, {
+        toValue: -70, // Move higher on the page
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+      
+      // Animate card height expansion
+      Animated.timing(cardMaxHeight, {
+        toValue: 2000, // Large value to allow natural sizing
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+      
+      // Remove height animation - let content determine size naturally
+      inputHeight.setValue(999); // Set to large value to allow natural sizing
+      
+      // Animate response fade in
+      setTimeout(() => {
+        Animated.timing(responseOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+        
+        // Animate insights button fade in
+        setTimeout(() => {
+          Animated.timing(insightsButtonOpacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }, 50);
+      }, 150);
+    }
+  };
+
+  const handleViewInsights = () => {
+    onNavigateToInsights();
+  };
+
+  const handleNewQuestion = () => {
+    // Animate response and insights button fade out
+    Animated.timing(responseOpacity, {
+      toValue: 0,
+      duration: 250,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      useNativeDriver: true,
+    }).start();
+    
+    Animated.timing(insightsButtonOpacity, {
+      toValue: 0,
+      duration: 250,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      useNativeDriver: true,
+    }).start();
+    
+    // Animate input height collapse
+    Animated.timing(inputHeight, {
+      toValue: 52,
+      duration: 250,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      useNativeDriver: false,
+    }).start();
+    
+    // Animate card height collapse
+    Animated.timing(cardMaxHeight, {
+      toValue: 300,
+      duration: 250,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      useNativeDriver: false,
+    }).start();
+    
+    // Animate container move down
+    Animated.timing(containerTop, {
+      toValue: 120,
+      duration: 250,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      useNativeDriver: false,
+    }).start();
+    
+    // Animate button fade in and expand (starts immediately with other animations)
+    Animated.timing(buttonOpacity, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+    
+    Animated.timing(buttonContainerHeight, {
+      toValue: 56,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+    
+    // After animations complete, reset state
+    setTimeout(() => {
+      setHealthQuestion('');
+      setShowResponse(false);
+      setResponseText('');
+    }, 250);
   };
 
   const handleDataPress = () => {
@@ -67,8 +198,9 @@ export default function HomeScreen({ onNavigateToApps }) {
           showsVerticalScrollIndicator={false}
         >
           {/* Center Card */}
-          <View style={styles.centerContainer}>
-            <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.cardBlur}>
+          <Animated.View style={[styles.centerContainer, { marginTop: containerTop }]}>
+            <Animated.View style={{ maxHeight: cardMaxHeight, overflow: 'hidden', width: '100%' }}>
+              <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.cardBlur}>
               <View style={styles.card}>
                 <View style={styles.cardContent}>
                   <Text style={styles.title}>You-I</Text>
@@ -76,28 +208,68 @@ export default function HomeScreen({ onNavigateToApps }) {
                   
                   <View style={styles.inputContainer}>
                     <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.inputBlur}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Type your health question here..."
-                        placeholderTextColor="#6b7280"
-                        value={healthQuestion}
-                        onChangeText={setHealthQuestion}
-                        multiline={false}
-                      />
+                      <Animated.View style={[styles.animatedInputContainer, { maxHeight: inputHeight }]}>
+                        {!showResponse ? (
+                          /* Question Input */
+                          <TextInput
+                            style={styles.input}
+                            placeholder="Type your health question here..."
+                            placeholderTextColor="#6b7280"
+                            value={healthQuestion}
+                            onChangeText={setHealthQuestion}
+                            multiline={false}
+                          />
+                        ) : (
+                          /* Response Section */
+                          <Animated.View style={[styles.responseSection, { opacity: responseOpacity }]}>
+                            <View style={styles.questionDisplay}>
+                              <Text style={styles.questionText}>{healthQuestion}</Text>
+                            </View>
+                            
+                            <View style={styles.responseDisplay}>
+                              <Text style={styles.responseText}>{responseText}</Text>
+                            </View>
+                            
+                            <Animated.View style={[styles.insightsButtonContainer, { opacity: insightsButtonOpacity }]}>
+                              <TouchableOpacity 
+                                style={styles.insightsButton}
+                                onPress={handleViewInsights}
+                                activeOpacity={0.8}
+                              >
+                                <Text style={styles.insightsButtonText}>View You-I Insights</Text>
+                              </TouchableOpacity>
+                              
+                              <TouchableOpacity 
+                                style={styles.newQuestionButton}
+                                onPress={handleNewQuestion}
+                                activeOpacity={0.8}
+                              >
+                                <Ionicons name="close" size={24} color="#ffffff" />
+                              </TouchableOpacity>
+                            </Animated.View>
+                          </Animated.View>
+                        )}
+                      </Animated.View>
                     </BlurView>
                     
-                    <TouchableOpacity 
-                      style={styles.button}
-                      onPress={handleGetHealthGuidance}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.buttonText}>Get Health Guidance</Text>
-                    </TouchableOpacity>
+                    {/* Get Health Guidance Button */}
+                    <Animated.View style={{ height: buttonContainerHeight, overflow: 'hidden' }}>
+                      <Animated.View style={{ opacity: buttonOpacity }}>
+                        <TouchableOpacity 
+                          style={styles.button}
+                          onPress={handleGetHealthGuidance}
+                          activeOpacity={0.8}
+                        >
+                          <Text style={styles.buttonText}>Get Health Guidance</Text>
+                        </TouchableOpacity>
+                      </Animated.View>
+                    </Animated.View>
                   </View>
                 </View>
               </View>
             </BlurView>
-          </View>
+            </Animated.View>
+          </Animated.View>
 
           {/* Bottom Connect Section */}
           <View style={styles.connectSection}>
@@ -159,8 +331,8 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 2,
+    borderColor: '#eaff61',
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -224,7 +396,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#ffffff',
     marginBottom: 2,
   },
   subtitle: {
@@ -243,13 +415,56 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
+  animatedInputContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
+    minHeight: 52,
+    flexShrink: 0,
+  },
   input: {
     height: 52,
     paddingHorizontal: 20,
     textAlign: 'center',
     fontSize: 14,
     color: '#1f2937',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: 'transparent',
+  },
+  responseSection: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  questionDisplay: {
+    marginBottom: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  questionText: {
+    fontSize: 14,
+    color: '#1f2937',
+    fontWeight: '500',
+    textAlign: 'left',
+    flexWrap: 'wrap',
+    lineHeight: 20,
+  },
+  responseDisplay: {
+    marginBottom: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  responseText: {
+    fontSize: 14,
+    color: '#1f2937',
+    lineHeight: 20,
+    textAlign: 'left',
+    flexWrap: 'wrap',
+  },
+  insightsButtonContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 20,
   },
   button: {
     height: 48,
@@ -262,6 +477,36 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#000',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  insightsButton: {
+    flex: 1,
+    height: 50,
+    backgroundColor: '#eaff61',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 50,
+  },
+  insightsButtonText: {
+    color: '#000',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  newQuestionButton: {
+    width: 50,
+    height: 50,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    minHeight: 50,
+  },
+  newQuestionButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
     fontWeight: '600',
   },
   connectSection: {
