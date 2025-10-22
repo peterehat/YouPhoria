@@ -23,7 +23,7 @@
   "submit": {
     "production": {
       "ios": {
-        "bundleIdentifier": "com.youphoria.app"
+        "bundleIdentifier": "com.youphoria.app.dev"
       }
     }
   }

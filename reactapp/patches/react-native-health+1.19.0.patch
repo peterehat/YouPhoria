@@ -1,0 +1,14 @@
+diff --git a/node_modules/react-native-health/RCTAppleHealthKit/RCTAppleHealthKit.m b/node_modules/react-native-health/RCTAppleHealthKit/RCTAppleHealthKit.m
+index 1234567..abcdefg 100644
+--- a/node_modules/react-native-health/RCTAppleHealthKit/RCTAppleHealthKit.m
++++ b/node_modules/react-native-health/RCTAppleHealthKit/RCTAppleHealthKit.m
+@@ -32,7 +32,7 @@
+ 
+ bool hasListeners;
+ 
+-RCT_EXPORT_MODULE();
++RCT_EXPORT_MODULE(AppleHealthKit);
+ 
+ 
+ + (id)allocWithZone:(NSZone *)zone {
+

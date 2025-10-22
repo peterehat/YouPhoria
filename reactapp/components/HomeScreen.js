@@ -17,17 +17,29 @@ import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import ConnectButton from './ConnectButton';
 
-export default function HomeScreen({ onNavigateToApps, onNavigateToInsights }) {
+export default function HomeScreen() {
   const [healthQuestion, setHealthQuestion] = useState('');
   const [showResponse, setShowResponse] = useState(false);
   const [responseText, setResponseText] = useState('');
+  const [backgroundImage, setBackgroundImage] = useState(null);
+  
+  // Randomly select background image on component mount
+  useEffect(() => {
+    const backgrounds = [
+      require('../assets/background.png'),
+      require('../assets/group-post-workout.png'),
+      require('../assets/woman-kettle-bells.png')
+    ];
+    const randomIndex = Math.floor(Math.random() * backgrounds.length);
+    setBackgroundImage(backgrounds[randomIndex]);
+  }, []);
   
   // Animation values
   const buttonOpacity = useRef(new Animated.Value(1)).current;
   const insightsButtonOpacity = useRef(new Animated.Value(0)).current;
   const inputHeight = useRef(new Animated.Value(52)).current;
   const responseOpacity = useRef(new Animated.Value(0)).current;
-  const containerTop = useRef(new Animated.Value(120)).current; // Start position
+  const containerTop = useRef(new Animated.Value(200)).current; // Start position
   const cardMaxHeight = useRef(new Animated.Value(300)).current; // Card max height for animation
   const buttonContainerHeight = useRef(new Animated.Value(56)).current; // Button container height (48px button + 8px margin)
   const [contentHeight, setContentHeight] = useState(0);
@@ -48,13 +60,6 @@ export default function HomeScreen({ onNavigateToApps, onNavigateToInsights }) {
       
       Animated.timing(buttonContainerHeight, {
         toValue: 0,
-        duration: 250,
-        useNativeDriver: false,
-      }).start();
-      
-      // Animate container move up
-      Animated.timing(containerTop, {
-        toValue: -70, // Move higher on the page
         duration: 250,
         useNativeDriver: false,
       }).start();
@@ -90,7 +95,8 @@ export default function HomeScreen({ onNavigateToApps, onNavigateToInsights }) {
   };
 
   const handleViewInsights = () => {
-    onNavigateToInsights();
+    // Navigation is now handled by BottomNavigation component
+    console.log('Navigate to Insights');
   };
 
   const handleNewQuestion = () => {
@@ -120,14 +126,6 @@ export default function HomeScreen({ onNavigateToApps, onNavigateToInsights }) {
     // Animate card height collapse
     Animated.timing(cardMaxHeight, {
       toValue: 300,
-      duration: 250,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      useNativeDriver: false,
-    }).start();
-    
-    // Animate container move down
-    Animated.timing(containerTop, {
-      toValue: 120,
       duration: 250,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
       useNativeDriver: false,
@@ -163,7 +161,8 @@ export default function HomeScreen({ onNavigateToApps, onNavigateToInsights }) {
   };
 
   const handleAppsPress = () => {
-    onNavigateToApps();
+    // Navigation is now handled by BottomNavigation component
+    console.log('Navigate to Apps');
   };
 
   return (
@@ -172,8 +171,8 @@ export default function HomeScreen({ onNavigateToApps, onNavigateToInsights }) {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ImageBackground
-        source={require('../assets/background.png')}
-        //style={[styles.background, { transform: [{ translateY: 70 }] }]}
+        source={backgroundImage}
+        style={styles.background}
         resizeMode="cover"
       >
         {/* Logo */}
@@ -356,15 +355,13 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 250,
-    paddingBottom: 230,
+    paddingTop: 20,
+    paddingBottom: 0,
   },
   centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 120,
-    marginBottom: 70,
+    marginTop: 110,
+    marginBottom: 0,
   },
   cardBlur: {
     borderRadius: 24,
@@ -510,8 +507,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   connectSection: {
+    marginTop: 50,
     paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingBottom: 120, // Space for bottom navigation
+    paddingTop: 0,
     alignItems: 'center',
   },
   connectBadge: {

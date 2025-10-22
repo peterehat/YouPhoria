@@ -22,7 +22,7 @@ import HealthKitService from '../services/healthKitService';
 // Debug: Log native module availability
 console.log('AppsScreen - NativeModules.AppleHealthKit:', NativeModules.AppleHealthKit);
 
-export default function AppsScreen({ onNavigateToHome }) {
+export default function AppsScreen() {
   // Simple state management without Zustand
   const [connections, setConnections] = useState({
     appleHealth: false,
@@ -288,15 +288,7 @@ export default function AppsScreen({ onNavigateToHome }) {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={onNavigateToHome}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
           <Text style={styles.headerTitle}>Apps</Text>
-          <View style={styles.headerSpacer} />
         </View>
 
         {/* Content */}
@@ -383,31 +375,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingHorizontal: 24,
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 20,
     zIndex: 20,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(31, 41, 55, 0.8)',
-    borderWidth: 2,
-    borderColor: '#eaff61',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // iOS shadow
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    // Android shadow
-    elevation: 10,
   },
   headerTitle: {
     fontSize: 24,
@@ -421,9 +393,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.5,
     shadowRadius: 4,
-  },
-  headerSpacer: {
-    width: 40,
   },
   scrollContent: {
     flexGrow: 1,
@@ -624,10 +593,12 @@ const styles = StyleSheet.create({
   viewDataButton: {
     backgroundColor: 'rgba(59, 130, 246, 0.8)',
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 12,
     borderWidth: 0.5,
     borderColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   viewDataButtonText: {
     fontSize: 14,
