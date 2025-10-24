@@ -36,5 +36,6 @@ yarn-error.*
 *.tsbuildinfo
 
 # generated native folders
-/ios
-/android
+# Note: Keeping ios/android in version control for bare workflow with native modules
+# /ios
+# /android

@@ -12,6 +12,8 @@ import {
   KeyboardAvoidingView,
   Animated,
   Easing,
+  Keyboard,
+  Dimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,6 +24,8 @@ export default function HomeScreen() {
   const [showResponse, setShowResponse] = useState(false);
   const [responseText, setResponseText] = useState('');
   const [backgroundImage, setBackgroundImage] = useState(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   
   // Randomly select background image on component mount
   useEffect(() => {
@@ -33,6 +37,24 @@ export default function HomeScreen() {
     const randomIndex = Math.floor(Math.random() * backgrounds.length);
     setBackgroundImage(backgrounds[randomIndex]);
   }, []);
+
+  // Handle keyboard events
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+      setIsKeyboardVisible(true);
+    });
+    
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardHeight(0);
+      setIsKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
   
   // Animation values
   const buttonOpacity = useRef(new Animated.Value(1)).current;
@@ -40,7 +62,7 @@ export default function HomeScreen() {
   const inputHeight = useRef(new Animated.Value(52)).current;
   const responseOpacity = useRef(new Animated.Value(0)).current;
   const containerTop = useRef(new Animated.Value(200)).current; // Start position
-  const cardMaxHeight = useRef(new Animated.Value(300)).current; // Card max height for animation
+  const cardMaxHeight = useRef(new Animated.Value(2000)).current; // Start large, no animation needed // Card max height for animation
   const buttonContainerHeight = useRef(new Animated.Value(56)).current; // Button container height (48px button + 8px margin)
   const [contentHeight, setContentHeight] = useState(0);
 
@@ -49,48 +71,48 @@ export default function HomeScreen() {
       // Simulate getting a response
       const mockResponse = "Based on your question, here's some initial guidance. For more detailed insights, you can view the full analysis.";
       setResponseText(mockResponse);
-      setShowResponse(true);
+      // DO NOT call setShowResponse(true) here - wait for button collapse to complete
       
-      // Animate button fade out and collapse
-      Animated.timing(buttonOpacity, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }).start();
-      
-      Animated.timing(buttonContainerHeight, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: false,
-      }).start();
-      
-      // Animate card height expansion
-      Animated.timing(cardMaxHeight, {
-        toValue: 2000, // Large value to allow natural sizing
-        duration: 250,
-        useNativeDriver: false,
-      }).start();
-      
-      // Remove height animation - let content determine size naturally
-      inputHeight.setValue(999); // Set to large value to allow natural sizing
-      
-      // Animate response fade in
-      setTimeout(() => {
+      // Step 1: Animate button fade out and collapse (250ms)
+      Animated.parallel([
+        Animated.timing(buttonOpacity, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(buttonContainerHeight, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: false,
+        })
+      ]).start(() => {
+        // Step 2: After button collapse completes, render content and expand input
+        setShowResponse(true); // Render content NOW
+        
+        // Animate input height expansion smoothly
+        Animated.timing(inputHeight, {
+          toValue: 500,
+          duration: 450,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: false,
+        }).start();
+        
+        // Fade in response text during expansion
         Animated.timing(responseOpacity, {
           toValue: 1,
-          duration: 300,
+          duration: 350,
           useNativeDriver: true,
         }).start();
         
-        // Animate insights button fade in
+        // Fade in insights button near end
         setTimeout(() => {
           Animated.timing(insightsButtonOpacity, {
             toValue: 1,
             duration: 300,
             useNativeDriver: true,
           }).start();
-        }, 50);
-      }, 150);
+        }, 150);
+      });
     }
   };
 
@@ -123,13 +145,7 @@ export default function HomeScreen() {
       useNativeDriver: false,
     }).start();
     
-    // Animate card height collapse
-    Animated.timing(cardMaxHeight, {
-      toValue: 300,
-      duration: 250,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-      useNativeDriver: false,
-    }).start();
+      // Remove this animation entirely - card will naturally collapse when inputHeight collapses
     
     // Animate button fade in and expand (starts immediately with other animations)
     Animated.timing(buttonOpacity, {
@@ -166,10 +182,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <View style={styles.container}>
       <ImageBackground
         source={backgroundImage}
         style={styles.background}
@@ -192,10 +205,15 @@ export default function HomeScreen() {
         </View>
 
         {/* Main Content */}
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <View style={styles.contentWrapper}>
+          <ScrollView 
+            contentContainerStyle={[
+              styles.scrollContent,
+              isKeyboardVisible && { paddingBottom: keyboardHeight + 20 }
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
           {/* Center Card */}
           <Animated.View style={[styles.centerContainer, { marginTop: containerTop }]}>
             <Animated.View style={{ maxHeight: cardMaxHeight, overflow: 'hidden', width: '100%' }}>
@@ -294,9 +312,10 @@ export default function HomeScreen() {
               />
             </View>
           </View>
-        </ScrollView>
+          </ScrollView>
+        </View>
       </ImageBackground>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -309,6 +328,15 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  contentWrapper: {
+    flex: 1,
+    zIndex: 10,
   },
   logoContainer: {
     position: 'absolute',

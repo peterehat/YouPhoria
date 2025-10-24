@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 13.2.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -23,7 +23,8 @@
   "submit": {
     "production": {
       "ios": {
-        "bundleIdentifier": "com.youphoria.app.dev"
+        "bundleIdentifier": "com.youphoria.app",
+        "ascAppId": "6753881343"
       }
     }
   }

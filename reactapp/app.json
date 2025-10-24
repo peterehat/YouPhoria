@@ -21,7 +21,8 @@
       },
       "entitlements": {
         "com.apple.developer.healthkit": true
-      }
+      },
+      "buildNumber": "7"
     },
     "android": {
       "adaptiveIcon": {
