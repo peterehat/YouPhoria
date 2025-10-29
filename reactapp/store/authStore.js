@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as Crypto from 'expo-crypto';
+import Constants from 'expo-constants';
 
 // Complete the auth session for web browser
 WebBrowser.maybeCompleteAuthSession();
@@ -125,10 +126,13 @@ const useAuthStore = create((set, get) => ({
   signInWithGoogle: async () => {
     set({ loading: true, error: null });
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({
-        scheme: 'youphoria',
-        path: 'auth',
-      });
+      const isExpoGo = Constants.appOwnership === 'expo';
+      const redirectUrl = isExpoGo
+        ? AuthSession.makeRedirectUri({ useProxy: true })
+        : AuthSession.makeRedirectUri({ scheme: 'youphoria', path: 'auth' });
+
+      // TEMP: surface redirect URL for troubleshooting allow-list mismatches
+      console.log('Auth redirectUrl (Google):', redirectUrl);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -148,18 +152,23 @@ const useAuthStore = create((set, get) => ({
           redirectUrl
         );
 
-        if (result.type === 'success') {
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionError) {
-            set({ error: sessionError.message, loading: false });
-            return { success: false, error: sessionError.message };
+        // TEMP: log result for debugging
+        console.log('Auth session result (Google):', result.type);
+
+        if (result.type === 'success' && result.url) {
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession({
+            url: result.url,
+          });
+
+          if (exchangeError) {
+            set({ error: exchangeError.message, loading: false });
+            return { success: false, error: exchangeError.message };
           }
 
-          if (sessionData.session) {
+          if (exchangeData.session) {
             set({ 
-              session: sessionData.session, 
-              user: sessionData.session.user, 
+              session: exchangeData.session, 
+              user: exchangeData.session.user, 
               isAuthenticated: true,
               loading: false 
             });
@@ -180,10 +189,13 @@ const useAuthStore = create((set, get) => ({
   signInWithApple: async () => {
     set({ loading: true, error: null });
     try {
-      const redirectUrl = AuthSession.makeRedirectUri({
-        scheme: 'youphoria',
-        path: 'auth',
-      });
+      const isExpoGo = Constants.appOwnership === 'expo';
+      const redirectUrl = isExpoGo
+        ? AuthSession.makeRedirectUri({ useProxy: true })
+        : AuthSession.makeRedirectUri({ scheme: 'youphoria', path: 'auth' });
+
+      // TEMP: surface redirect URL for troubleshooting allow-list mismatches
+      console.log('Auth redirectUrl (Apple):', redirectUrl);
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
@@ -203,18 +215,23 @@ const useAuthStore = create((set, get) => ({
           redirectUrl
         );
 
-        if (result.type === 'success') {
-          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionError) {
-            set({ error: sessionError.message, loading: false });
-            return { success: false, error: sessionError.message };
+        // TEMP: log result for debugging
+        console.log('Auth session result (Apple):', result.type);
+
+        if (result.type === 'success' && result.url) {
+          const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession({
+            url: result.url,
+          });
+
+          if (exchangeError) {
+            set({ error: exchangeError.message, loading: false });
+            return { success: false, error: exchangeError.message };
           }
 
-          if (sessionData.session) {
+          if (exchangeData.session) {
             set({ 
-              session: sessionData.session, 
-              user: sessionData.session.user, 
+              session: exchangeData.session, 
+              user: exchangeData.session.user, 
               isAuthenticated: true,
               loading: false 
             });

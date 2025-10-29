@@ -19,8 +19,13 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import HealthKitService from '../services/healthKitService';
 
-// Debug: Log native module availability
-console.log('AppsScreen - NativeModules.AppleHealthKit:', NativeModules.AppleHealthKit);
+// Toggle verbose HealthKit logging here (independent flag for this screen)
+const DEBUG_HEALTHKIT = __DEV__ && false;
+
+// Debug: Log native module availability (dev-only)
+if (DEBUG_HEALTHKIT) {
+  console.log('AppsScreen - NativeModules.AppleHealthKit:', NativeModules.AppleHealthKit);
+}
 
 export default function AppsScreen() {
   // Simple state management without Zustand
@@ -151,9 +156,13 @@ export default function AppsScreen() {
       // Connect
       setIsLoading(true);
       try {
-        console.log('Requesting HealthKit permissions...');
+        if (DEBUG_HEALTHKIT) {
+          console.log('Requesting HealthKit permissions...');
+        }
         const authorized = await HealthKitService.requestPermissions();
-        console.log('HealthKit authorization result:', authorized);
+        if (DEBUG_HEALTHKIT) {
+          console.log('HealthKit authorization result:', authorized);
+        }
         
         if (authorized) {
           connectApp('appleHealth');

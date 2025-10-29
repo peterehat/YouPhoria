@@ -1,11 +1,16 @@
 import { Platform, NativeModules } from 'react-native';
 import AppleHealthKit, { HealthValue, HealthKitPermissions } from 'react-native-health';
 
-// Debug: Check if native module is available
-console.log('All NativeModules:', Object.keys(NativeModules));
-console.log('NativeModules.AppleHealthKit:', NativeModules.AppleHealthKit);
-console.log('NativeModules.RCTAppleHealthKit:', NativeModules.RCTAppleHealthKit);
-console.log('HealthKit Available Methods:', AppleHealthKit);
+// Toggle verbose HealthKit logging here
+const DEBUG_HEALTHKIT = __DEV__ && false;
+
+// Debug: Check if native module is available (dev-only)
+if (DEBUG_HEALTHKIT) {
+  console.log('All NativeModules:', Object.keys(NativeModules));
+  console.log('NativeModules.AppleHealthKit:', NativeModules.AppleHealthKit);
+  console.log('NativeModules.RCTAppleHealthKit:', NativeModules.RCTAppleHealthKit);
+  console.log('HealthKit Available Methods:', AppleHealthKit);
+}
 
 // Define all available HealthKit permissions
 const permissions = {
@@ -129,7 +134,9 @@ class HealthKitService {
           this.isInitialized = false;
           reject(new Error(`HealthKit initialization failed: ${error}`));
         } else {
-          console.log('HealthKit initialized successfully');
+          if (DEBUG_HEALTHKIT) {
+            console.log('HealthKit initialized successfully');
+          }
           this.isInitialized = true;
           resolve(true);
         }
@@ -152,7 +159,9 @@ class HealthKitService {
           console.log('HealthKit availability check error:', error);
           resolve(false);
         } else {
-          console.log('HealthKit availability:', results);
+          if (DEBUG_HEALTHKIT) {
+            console.log('HealthKit availability:', results);
+          }
           resolve(results);
         }
       });
