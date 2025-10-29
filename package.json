@@ -3,56 +3,13 @@
   "version": "1.0.0",
   "description": "Full-stack monorepo application with React website, Node.js backend, admin dashboard, and optional React Native app",
   "private": true,
-  "workspaces": [
-    "backend",
-    "website",
-    "admin",
-    "reactapp"
-  ],
   "scripts": {
-    "install:all": "npm install && npm run install:workspaces",
-    "install:workspaces": "npm install --workspaces",
-    "dev:backend": "npm run dev --workspace=backend",
-    "dev:website": "npm run dev --workspace=website",
-    "dev:admin": "npm run dev --workspace=admin",
-    "dev:app": "npm run start --workspace=reactapp",
-    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:website\" \"npm run dev:admin\"",
-    "build:backend": "npm run build --workspace=backend",
-    "build:website": "npm run build --workspace=website",
-    "build:admin": "npm run build --workspace=admin",
-    "build:app": "npm run build --workspace=reactapp",
-    "build:all": "npm run build:backend && npm run build:website && npm run build:admin && npm run build:app",
-    "test": "jest",
-    "test:frontend": "jest --projects website admin",
-    "test:backend": "jest --projects backend",
-    "test:all": "jest --projects backend website admin",
-    "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch",
-    "lint": "npm run lint --workspaces",
-    "lint:fix": "npm run lint:fix --workspaces",
-    "clean": "npm run clean --workspaces && rm -rf node_modules",
-    "migrate": "npm run migrate --workspace=backend"
-  },
-  "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.11.24",
-    "concurrently": "^8.2.2",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "jest-environment-node": "^29.7.0",
-    "@testing-library/jest-dom": "^6.4.2",
-    "@testing-library/react": "^14.2.1",
-    "@testing-library/user-event": "^14.5.2",
-    "typescript": "^5.3.3",
-    "ts-jest": "^29.1.2",
-    "eslint": "^8.57.0",
-    "prettier": "^3.2.5"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
-  "overrides": {
-    "typescript": "^5.3.3"
+    "dev:backend": "cd backend && npm run dev",
+    "dev:website": "cd website && npm run dev",
+    "dev:admin": "cd admin && npm run dev",
+    "dev:app": "cd reactapp && npm start",
+    "build:backend": "cd backend && npm run build",
+    "build:website": "cd website && npm run build",
+    "build:admin": "cd admin && npm run build"
   }
 }

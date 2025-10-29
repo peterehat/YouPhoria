@@ -14,10 +14,12 @@ import {
   Easing,
   Keyboard,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import ConnectButton from './ConnectButton';
+import useAuthStore from '../store/authStore';
 
 export default function HomeScreen() {
   const [healthQuestion, setHealthQuestion] = useState('');
@@ -26,6 +28,8 @@ export default function HomeScreen() {
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  
+  const { user, signOut } = useAuthStore();
   
   // Randomly select background image on component mount
   useEffect(() => {
@@ -181,6 +185,40 @@ export default function HomeScreen() {
     console.log('Navigate to Apps');
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await signOut();
+            if (!result.success) {
+              Alert.alert('Error', result.error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const getUserInitials = () => {
+    if (user?.user_metadata?.full_name) {
+      const names = user.user_metadata.full_name.split(' ');
+      return names.map(name => name[0]).join('').toUpperCase();
+    }
+    if (user?.email) {
+      return user.email[0].toUpperCase();
+    }
+    return 'U';
+  };
+
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -199,9 +237,11 @@ export default function HomeScreen() {
 
         {/* User Avatar */}
         <View style={styles.avatarContainer}>
-          <BlurView intensity={80} tint="dark" style={styles.avatarBlur}>
-            <Text style={styles.avatarText}>PE</Text>
-          </BlurView>
+          <TouchableOpacity onPress={handleLogout} activeOpacity={0.8}>
+            <BlurView intensity={80} tint="dark" style={styles.avatarBlur}>
+              <Text style={styles.avatarText}>{getUserInitials()}</Text>
+            </BlurView>
+          </TouchableOpacity>
         </View>
 
         {/* Main Content */}
