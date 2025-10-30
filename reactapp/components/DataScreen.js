@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,18 +11,17 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import Background from './Background';
 
 export default function DataScreen() {
+  // Background handled by shared Background component
+
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ImageBackground
-        source={require('../assets/background.png')}
-        resizeMode="cover"
-        style={styles.backgroundImage}
-      >
+      <Background style={styles.backgroundImage}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Data</Text>
@@ -33,14 +32,7 @@ export default function DataScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.titleContainer}>
-            <BlurView intensity={60} tint="light" style={styles.titleBlur}>
-              <Text style={styles.title}>Your Health Data</Text>
-              <Text style={styles.subtitle}>
-                View and analyze your health metrics and trends
-              </Text>
-            </BlurView>
-          </View>
+          
 
           {/* Placeholder content */}
           <View style={styles.placeholderContainer}>
@@ -55,7 +47,7 @@ export default function DataScreen() {
             </BlurView>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </Background>
     </KeyboardAvoidingView>
   );
 }
@@ -69,6 +61,14 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   header: {
     flexDirection: 'row',

@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ImageBackground,
   Image,
   StyleSheet,
   ScrollView,
@@ -19,6 +18,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import ConnectButton from './ConnectButton';
+import Background from './Background';
 import useAuthStore from '../store/authStore';
 
 export default function HomeScreen() {
@@ -221,15 +221,11 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <ImageBackground
-        source={backgroundImage}
-        style={styles.background}
-        resizeMode="cover"
-      >
+      <Background style={styles.background}>
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../assets/logo.png')}
+            source={require('../assets/You-i-Logo-circle.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -260,7 +256,11 @@ export default function HomeScreen() {
               <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.cardBlur}>
               <View style={styles.card}>
                 <View style={styles.cardContent}>
-                  <Text style={styles.title}>You-I</Text>
+                  <Image 
+                    source={require('../assets/You-i-Logo-wide.png')}
+                    style={styles.centerLogo}
+                    resizeMode="contain"
+                  />
                   <Text style={styles.subtitle}>Ask me wellness questions.</Text>
                   
                   <View style={styles.inputContainer}>
@@ -354,7 +354,7 @@ export default function HomeScreen() {
           </View>
           </ScrollView>
         </View>
-      </ImageBackground>
+      </Background>
     </View>
   );
 }
@@ -374,6 +374,14 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  },
   contentWrapper: {
     flex: 1,
     zIndex: 10,
@@ -385,8 +393,9 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   logo: {
-    height: 32,
-    width: 120,
+    height: 52,
+    width: 52,
+    tintColor: '#ffffff',
   },
   avatarContainer: {
     position: 'absolute',
@@ -463,6 +472,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ffffff',
     marginBottom: 2,
+  },
+  centerLogo: {
+    height: 48,
+    width: 200,
+    tintColor: '#ffffff',
+    marginBottom: 20,
+    marginLeft: -15,
   },
   subtitle: {
     fontSize: 16,

@@ -1,3 +1,258 @@
+:root {
+  --bg: #0f172a; /* slate-900 */
+  --panel: #111827; /* gray-900 */
+  --panel-2: #0b1220; /* darker */
+  --text: #e5e7eb; /* gray-200 */
+  --muted: #9ca3af; /* gray-400 */
+  --accent: #6366f1; /* indigo-500 */
+  --accent-2: #22c55e; /* green-500 */
+  --border: #1f2937; /* gray-800 */
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+.admin-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: 100vh;
+}
+
+.admin-sidebar {
+  background: var(--panel-2);
+  border-right: 1px solid var(--border);
+  padding: 16px 12px;
+}
+
+.sidebar-brand {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin: 8px 8px 16px 8px;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 4px;
+}
+
+.sidebar-link {
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  border: 1px solid transparent;
+}
+
+.sidebar-link:hover {
+  background: #0a101c;
+  border-color: var(--border);
+}
+
+.sidebar-link.is-active {
+  background: #131c2b;
+  border-color: #1e293b;
+}
+
+.admin-main {
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-chip-button {
+  cursor: pointer;
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #0c1423;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1f2937;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.user-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.user-name {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.admin-content {
+  padding: 24px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.panels-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-title {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+.card-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.metric {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.metric-sub {
+  color: var(--muted);
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.activity-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.quick-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.btn {
+  background: var(--accent);
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-weight: 600;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.dropdown {
+  position: absolute;
+  right: 16px;
+  top: 64px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  width: 200px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  z-index: 20;
+}
+
+.dropdown-item {
+  width: 100%;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 8px;
+}
+
+.dropdown-item:hover {
+  background: #0a101c;
+}
+
+.dropdown-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
+
+@media (max-width: 1100px) {
+  .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .panels-grid { grid-template-columns: 1fr; }
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

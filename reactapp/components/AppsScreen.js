@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import Background from './Background';
 import Constants from 'expo-constants';
 import HealthKitService from '../services/healthKitService';
 
@@ -45,6 +46,8 @@ export default function AppsScreen() {
 
   // Check if running in Expo Go (which doesn't support HealthKit)
   const isExpoGo = Constants.appOwnership === 'expo';
+  // Background handled by shared Background component
+
 
   // Helper functions to replace Zustand store methods
   const connectApp = (appId) => {
@@ -289,12 +292,7 @@ export default function AppsScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <StatusBar barStyle="light-content" />
-      <ImageBackground
-        source={require('../assets/background.png')}
-        resizeMode="cover"
-        style={styles.backgroundImage}
-        blurRadius={40}
-      >
+      <Background style={styles.backgroundImage}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Apps</Text>
@@ -305,14 +303,7 @@ export default function AppsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.titleContainer}>
-            <BlurView intensity={60} tint="light" style={styles.titleBlur}>
-              <Text style={styles.title}>Connect Your Apps</Text>
-              <Text style={styles.subtitle}>
-                Link your favorite health and fitness apps to get personalized insights
-              </Text>
-            </BlurView>
-          </View>
+          
 
           <View style={styles.appsContainer}>
             {apps.map(renderAppCard)}
@@ -328,7 +319,7 @@ export default function AppsScreen() {
             </BlurView>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </Background>
 
       {/* Health Data Modal */}
       <Modal
@@ -380,6 +371,14 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   header: {
     flexDirection: 'row',

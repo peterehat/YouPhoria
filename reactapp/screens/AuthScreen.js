@@ -9,9 +9,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ImageBackground,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import Background from '../components/Background';
 import useAuthStore from '../store/authStore';
 
 const AuthScreen = () => {
@@ -124,8 +124,7 @@ const AuthScreen = () => {
   }, []);
 
   return (
-    <ImageBackground source={backgroundImage} style={styles.background} resizeMode="cover">
-      <View style={styles.overlay} />
+    <Background style={styles.background} overlayOpacity={0.75}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -241,7 +240,7 @@ const AuthScreen = () => {
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </ImageBackground>
+    </Background>
   );
 };
 

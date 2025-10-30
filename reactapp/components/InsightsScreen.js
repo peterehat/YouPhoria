@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,18 +12,17 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import Background from './Background';
 
 export default function InsightsScreen() {
+  // Background handled by shared Background component
+
   return (
     <KeyboardAvoidingView 
       style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ImageBackground
-        source={require('../assets/background.png')}
-        resizeMode="cover"
-        style={styles.backgroundImage}
-      >
+      <Background style={styles.backgroundImage}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>You-I Insights</Text>
@@ -34,14 +33,7 @@ export default function InsightsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.titleContainer}>
-            <BlurView intensity={60} tint="light" style={styles.titleBlur}>
-              <Text style={styles.title}>You-I Insights</Text>
-              <Text style={styles.subtitle}>
-                Your personalized health and wellness insights will appear here
-              </Text>
-            </BlurView>
-          </View>
+          
 
           {/* Placeholder content */}
           <View style={styles.placeholderContainer}>
@@ -56,7 +48,7 @@ export default function InsightsScreen() {
             </BlurView>
           </View>
         </ScrollView>
-      </ImageBackground>
+      </Background>
     </KeyboardAvoidingView>
   );
 }
@@ -70,6 +62,14 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   header: {
     flexDirection: 'row',
