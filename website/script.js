@@ -1,3 +1,77 @@
+// Background image rotation with fade
+const backgroundImages = [
+    'backgrounds/blood-drawn.png',
+    'backgrounds/group-post-workout.png',
+    'backgrounds/man-towel-2.png',
+    'backgrounds/man-towel.png',
+    'backgrounds/stationary-bike.png',
+    'backgrounds/woman-curls.png',
+    'backgrounds/woman-kettle-bells.png'
+];
+
+let currentBackgroundIndex = 0;
+
+// Preload all background images and create layers
+function initBackgrounds() {
+    const backgroundContainer = document.getElementById('backgroundContainer');
+    if (!backgroundContainer) return;
+    backgroundImages.forEach((imageSrc, index) => {
+        const layer = document.createElement('div');
+        layer.className = 'background-layer';
+        if (index === 0) {
+            layer.classList.add('active');
+        }
+        layer.style.backgroundImage = `url('${imageSrc}')`;
+        backgroundContainer.appendChild(layer);
+    });
+}
+
+// Switch to next background with fade
+function switchBackground() {
+    const layers = document.querySelectorAll('.background-layer');
+    const currentLayer = layers[currentBackgroundIndex];
+    const nextIndex = (currentBackgroundIndex + 1) % backgroundImages.length;
+    const nextLayer = layers[nextIndex];
+    
+    // Fade out current, fade in next
+    currentLayer.classList.remove('active');
+    nextLayer.classList.add('active');
+    
+    currentBackgroundIndex = nextIndex;
+}
+
+// Initialize backgrounds on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Supabase client
+    if (typeof supabase !== 'undefined') {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } else {
+        console.error('Supabase library not loaded');
+    }
+    
+    initBackgrounds();
+    // Switch background every 8 seconds
+    setInterval(switchBackground, 8000);
+    
+    // Handle form submission success/error (for Netlify - backup)
+    // Check if redirected from Netlify form submission
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('form-submitted') === 'true') {
+        if (formSuccess) {
+            formSuccess.style.display = 'block';
+            formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
+            contactForm.reset();
+            // Scroll to success message
+            formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+    
+    // Handle hash-based modal opening
+    handleHashModal();
+    
+    // Phone number formatting is initialized in a separate DOMContentLoaded handler above
+});
+
 // Rotating screenshots with fan-out effect
 const phoneFrames = document.querySelectorAll('.phone-frame');
 let currentIndex = 0;
@@ -105,34 +179,127 @@ if (phoneFrames.length > 0) {
 });
 }
 
+// Phone number formatting
+function formatPhoneNumber(input) {
+    // Remove all non-digit characters
+    let value = input.value.replace(/\D/g, '');
+    
+    // Format as XXX-XXX-XXXX
+    if (value.length <= 3) {
+        input.value = value;
+    } else if (value.length <= 6) {
+        input.value = value.slice(0, 3) + '-' + value.slice(3);
+    } else {
+        input.value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+    }
+}
+
+// Initialize phone formatting on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            formatPhoneNumber(e.target);
+        });
+        
+        phoneInput.addEventListener('keydown', function(e) {
+            // Allow backspace, delete, tab, escape, enter
+            if ([8, 9, 27, 13, 46].indexOf(e.keyCode) !== -1 ||
+                // Allow Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+                (e.keyCode === 65 && e.ctrlKey === true) ||
+                (e.keyCode === 67 && e.ctrlKey === true) ||
+                (e.keyCode === 86 && e.ctrlKey === true) ||
+                (e.keyCode === 88 && e.ctrlKey === true) ||
+                // Allow home, end, left, right
+                (e.keyCode >= 35 && e.keyCode <= 39)) {
+                return;
+            }
+            // Ensure that it is a number and stop the keypress
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+
+// Supabase configuration
+const SUPABASE_URL = 'https://empmaiqjpyhanrpuabou.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtcG1haXFqcHloYW5ycHVhYm91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3MTU1MjAsImV4cCI6MjA3NzI5MTUyMH0.rRZsoyrEfvkNiBkOjBUQPjw38_bhIOBJarrjwusWXmM';
+
+// Initialize Supabase client (will be initialized after DOM loads)
+let supabaseClient = null;
+
 // Form submission handling
 const contactForm = document.getElementById('contactForm');
 const formSuccess = document.getElementById('formSuccess');
 const formError = document.getElementById('formError');
 
 if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
+    contactForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
         // Hide any previous messages
         if (formSuccess) formSuccess.style.display = 'none';
         if (formError) formError.style.display = 'none';
         
-        // Netlify will handle the form submission automatically
+        // Get form data
+        const formData = new FormData(contactForm);
+        const name = formData.get('name');
+        const email = formData.get('email');
+        const phone = formData.get('phone');
+        const referral = formData.get('referral');
+        
+        try {
+            // Check if Supabase client is initialized
+            if (!supabaseClient) {
+                throw new Error('Database connection not available. Please refresh the page and try again.');
+            }
+            
+            // Submit to Supabase
+            const { data, error } = await supabaseClient
+                .from('vip_early_adopters')
+                .insert([
+                    {
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        referral_source: referral,
+                        submitted_at: new Date().toISOString()
+                    }
+                ])
+                .select();
+            
+            if (error) {
+                throw error;
+            }
+            
+            // Show success message
+            if (formSuccess) {
+                formSuccess.style.display = 'block';
+                formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
+                formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+            
+            // Reset form
+            contactForm.reset();
+            
+            // Also submit to Netlify as backup (remove data-netlify if you don't want this)
+            // Netlify will handle it automatically if data-netlify is present
+            
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            
+            // Show error message
+            if (formError) {
+                formError.style.display = 'block';
+                formError.textContent = 'Oops! Something went wrong. Please try again or contact us directly.';
+                formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
     });
 }
 
-// Handle form submission success/error (for Netlify)
-document.addEventListener('DOMContentLoaded', function() {
-    // Check if redirected from Netlify form submission
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('form-submitted') === 'true') {
-        if (formSuccess) {
-            formSuccess.style.display = 'block';
-            contactForm.reset();
-            // Scroll to success message
-            formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    }
-});
+
 
 // Modal functionality
 const privacyModal = document.getElementById('privacyModal');
@@ -264,10 +431,7 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Check hash on page load
-document.addEventListener('DOMContentLoaded', function() {
-    handleHashModal();
-});
+
 
 // Handle hash changes (when user navigates with hash)
 window.addEventListener('hashchange', function() {

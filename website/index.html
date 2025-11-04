@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouPhoria Wellness - Your Personal Wellness AI</title>
-    <meta name="description" content="YouPhoria Wellness: Your personal AI wellness assistant. Connect all your health apps, ask wellness questions, and get personalized insights.">
+    <title>You-i - Your Personal Wellness AI</title>
+    <meta name="description" content="You-i: Your personal AI wellness assistant. Connect all your health apps, ask wellness questions, and get personalized insights.">
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+    <!-- Background container for fading images -->
+    <div class="background-container" id="backgroundContainer"></div>
     <!-- Main Content -->
     <main class="main-content">
         <!-- Two Column Layout: Screenshots Left, Form Right -->
@@ -19,21 +22,28 @@
                     <div class="left-column">
                         <div class="screenshot-container">
                             <div class="phone-frame phone-1">
-                                <img src="screenshots/01.png" alt="YouPhoria Wellness App Screenshot">
+                                <img src="screenshots/01.png" alt="You-i App Screenshot">
                 </div>
                             <div class="phone-frame phone-2">
-                                <img src="screenshots/02.png" alt="YouPhoria Wellness App Screenshot">
+                                <img src="screenshots/02.png" alt="You-i App Screenshot">
             </div>
                             <div class="phone-frame phone-3">
-                                <img src="screenshots/03.png" alt="YouPhoria Wellness App Screenshot">
+                                <img src="screenshots/03.png" alt="You-i App Screenshot">
         </div>
                             <div class="phone-frame phone-4">
-                                <img src="screenshots/04.png" alt="YouPhoria Wellness App Screenshot">
+                                <img src="screenshots/04.png" alt="You-i App Screenshot">
                     </div>
                             <div class="phone-frame phone-5">
-                                <img src="screenshots/05.png" alt="YouPhoria Wellness App Screenshot">
+                                <img src="screenshots/05.png" alt="You-i App Screenshot">
                     </div>
             </div>
+
+                        <!-- Wellness Unified Section -->
+                        <div class="wellness-unified-section">
+                            <h2 class="section-heading">Your Wellness, Unified</h2>
+                            <p class="section-description">You-i brings all your health data together in one place. Connect your favorite fitness apps, ask your AI wellness assistant questions, and get personalized insights to help you achieve your health goals. Stop switching between apps and start seeing the full picture of your wellness.</p>
+                            <p class="section-description" style="margin-top: 1.5rem; font-weight: 500;">One app. One assistant. Your complete wellness journey.</p>
+                        </div>
 
                     </div>
                     
@@ -41,18 +51,18 @@
                     <div class="right-column">
                         <!-- Logo -->
                         <div class="logo-right">
-                            <img src="logo.png" alt="You-I by YouPhoria Wellness Logo">
+                            <img src="logo.png" alt="You-i Logo">
                             <span>You-I</span>
                     </div>
                     
                         <!-- Hero Section -->
                         <div class="hero-right">
-                            <h1 class="tagline">Find more joy. Do it intelligently.</h1>
+                            <h1 class="tagline">Find more joy.<br>Do it intelligently.</h1>
                             <p class="description">Your personal AI wellness assistant. Connect all your health apps, ask wellness questions, and get personalized insights to help you live healthier.</p>
                         </div>
                 
                         <div class="support-section">
-                            <h2>Get Support</h2>
+                            <h2>Get Early VIP Access</h2>
                     
                     <form id="contactForm" class="contact-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
                         <input type="hidden" name="form-name" value="contact">
@@ -71,22 +81,24 @@
                         </div>
                         
                         <div class="form-group">
-                            <label for="subject">Subject</label>
-                                    <select id="subject" name="subject" required>
-                                        <option value="">Select a topic</option>
-                                        <option value="Account Issues">Account Issues</option>
-                                        <option value="Technical Support">Technical Support</option>
-                                        <option value="Feature Request">Feature Request</option>
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" name="phone" placeholder="XXX-XXX-XXXX" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="referral">Where did you hear about us?</label>
+                                    <select id="referral" name="referral" required>
+                                        <option value="">Select an option</option>
+                                        <option value="Social Media">Social Media</option>
+                                        <option value="Friend or Family">Friend or Family</option>
+                                        <option value="Search Engine">Search Engine</option>
+                                        <option value="Advertisement">Advertisement</option>
+                                        <option value="App Store">App Store</option>
                                         <option value="Other">Other</option>
                                     </select>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="message">Message</label>
-                            <textarea id="message" name="message" rows="5" required></textarea>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">Send Message</button>
+                        <button type="submit" class="btn btn-primary">Join VIP Early Access</button>
                     </form>
                     
                     <div id="formSuccess" class="form-message success" style="display: none;">
@@ -105,16 +117,6 @@
         <section class="bottom-section">
             <div class="container">
                 <div class="bottom-content">
-                    <!-- Mobile Badge -->
-                    <div class="mobile-badge-centered">
-                        <p>📱 Available on Mobile</p>
-                    </div>
-                    
-                    <!-- Why Choose -->
-                    <h2 class="section-heading">Your Wellness, Unified</h2>
-                    
-                    <p class="section-description">YouPhoria Wellness brings all your health data together in one place. Connect your favorite fitness apps, ask your AI wellness assistant questions, and get personalized insights to help you achieve your health goals.</p>
-                    
                     <!-- Features Grid -->
                     <div class="features-grid-bottom">
                         <div class="feature-item">
@@ -123,7 +125,7 @@
                         </div>
                         <div class="feature-item">
                             <span class="feature-bullet">•</span>
-                            <span>Connect Apple Health, MyFitnessPal, Strong, Strava, Fitbit</span>
+                            <span>Connect Apple Health, MyFitnessPal, Strong, Strava, Fitbit, and more.</span>
                         </div>
                         <div class="feature-item">
                             <span class="feature-bullet">•</span>
@@ -137,13 +139,17 @@
                             <span class="feature-bullet">•</span>
                             <span>Comprehensive health dashboard</span>
                         </div>
+                        <div class="feature-item">
+                            <span class="feature-bullet">•</span>
+                            <span>Sync data seamlessly across all your devices</span>
+                        </div>
                     </div>
                     
                     <!-- About -->
                     <div class="about-bottom">
                         <h3>About the App</h3>
-                        <p>YouPhoria Wellness is your personal AI wellness assistant that helps you take control of your health journey. By connecting all your health and fitness apps in one place, You-I provides a comprehensive view of your wellness data and offers personalized insights to help you make better health decisions.</p>
-                        <p>Whether you're tracking workouts, monitoring nutrition, or analyzing sleep patterns, YouPhoria Wellness brings everything together and makes it easy to understand your health data through intelligent AI-powered guidance.</p>
+                        <p>You-i is your personal AI wellness assistant that helps you take control of your health journey. By connecting all your health and fitness apps in one place, You-i provides a comprehensive view of your wellness data and offers personalized insights to help you make better health decisions.</p>
+                        <p>Whether you're tracking workouts, monitoring nutrition, or analyzing sleep patterns, You-i brings everything together and makes it easy to understand your health data through intelligent AI-powered guidance.</p>
                         <p><strong>Questions?</strong> Use the contact form above to reach out to our support team.</p>
                     </div>
                 </div>
@@ -154,7 +160,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 YouPhoria Wellness. All rights reserved.</p>
+            <p>&copy; 2025 You-i. All rights reserved.</p>
             <div class="footer-links">
                 <a href="#" id="privacyLink">Privacy Policy</a>
                 <span> | </span>
@@ -174,7 +180,7 @@
                 <p><strong>Last Updated:</strong> January 2025</p>
                 
                 <h3>Introduction</h3>
-                <p>YouPhoria Wellness ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.</p>
+                <p>You-i ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.</p>
                 
                 <h3>Information We Collect</h3>
                 <h4>Personal Information</h4>
@@ -252,10 +258,10 @@
                 <p><strong>Last Updated:</strong> January 2025</p>
                 
                 <h3>Agreement to Terms</h3>
-                <p>By accessing or using YouPhoria Wellness ("the App"), you agree to be bound by these Terms of Use ("Terms"). If you disagree with any part of these terms, you may not access the App.</p>
+                <p>By accessing or using You-i ("the App"), you agree to be bound by these Terms of Use ("Terms"). If you disagree with any part of these terms, you may not access the App.</p>
                 
                 <h3>Description of Service</h3>
-                <p>YouPhoria Wellness is a mobile application that provides:</p>
+                <p>You-i is a mobile application that provides:</p>
                 <ul>
                     <li>AI-powered wellness assistant (You-I)</li>
                     <li>Integration with health and fitness apps (Apple Health, MyFitnessPal, Strong, Strava, Fitbit)</li>
@@ -299,13 +305,13 @@
                 </ul>
                 
                 <h3>Intellectual Property</h3>
-                <p>The App and its original content, features, and functionality are owned by YouPhoria Wellness and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.</p>
+                <p>The App and its original content, features, and functionality are owned by You-i and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.</p>
                 
                 <h3>Disclaimer of Warranties</h3>
                 <p>The App is provided "AS IS" and "AS AVAILABLE" without warranties of any kind, either express or implied, including but not limited to merchantability, fitness for a particular purpose, non-infringement, or uninterrupted or error-free operation.</p>
                 
                 <h3>Limitation of Liability</h3>
-                <p>To the maximum extent permitted by law, YouPhoria Wellness shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses. This includes any health-related decisions made based on the App's insights or recommendations.</p>
+                <p>To the maximum extent permitted by law, You-i shall not be liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, or any loss of data, use, goodwill, or other intangible losses. This includes any health-related decisions made based on the App's insights or recommendations.</p>
                 
                 <h3>Data Backup</h3>
                 <p>While we strive to maintain data integrity, you are responsible for maintaining backups of your content. We are not liable for any loss of data.</p>

@@ -26,17 +26,41 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     line-height: 1.6;
     color: var(--text-dark);
-    background-image: url('background.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     position: relative;
 }
 
+/* Background image container */
+.background-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+}
+
+.background-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+}
+
+.background-layer.active {
+    opacity: 1;
+}
+
+/* Dark overlay */
 body::before {
     content: '';
     position: fixed;
@@ -80,13 +104,15 @@ body::before {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 2rem;
+    margin-bottom: 3rem;
 }
 
 .logo-right img {
-    height: 40px;
+    height: 62px;
     width: auto;
-    max-width: 200px;
+    max-width: 312px;
+    filter: brightness(0) invert(1) drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    opacity: 1;
 }
 
 .logo-right span {
@@ -102,16 +128,16 @@ body::before {
 }
 
 .hero-right .tagline {
-    font-size: 2.5rem;
+    font-size: 4.25rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    color: var(--text-dark);
+    color: var(--primary-color);
     line-height: 1.2;
 }
 
 .hero-right .description {
     font-size: 1.125rem;
-    color: var(--text-light);
+    color: #9ca3af;
     line-height: 1.7;
 }
 
@@ -149,6 +175,23 @@ body::before {
     perspective: 1000px;
     margin-bottom: 2rem;
     margin-left: -100px;
+}
+
+.wellness-unified-section {
+    margin-top: 6rem;
+    text-align: left;
+}
+
+.wellness-unified-section .section-heading {
+    text-align: left;
+    color: var(--primary-color);
+    margin-top: 2rem;
+}
+
+.wellness-unified-section .section-description {
+    text-align: left;
+    margin-left: 0;
+    margin-bottom: 0;
 }
 
 .phone-frame {
@@ -238,7 +281,7 @@ body::before {
 
 /* Unified Bottom Section */
 .bottom-section {
-    background: linear-gradient(to bottom, var(--bg-white) 0%, var(--bg-light) 100%);
+    background: transparent;
     padding: 4rem 0;
     margin-top: 0;
 }
@@ -255,7 +298,7 @@ body::before {
 
 .mobile-badge-centered p {
     font-size: 1.125rem;
-    color: var(--text-light);
+    color: #9ca3af;
     font-weight: 500;
 }
 
@@ -263,12 +306,12 @@ body::before {
     font-size: 2.5rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    color: var(--text-dark);
+    color: #d1d5db;
 }
 
 .section-description {
     font-size: 1.125rem;
-    color: var(--text-light);
+    color: #9ca3af;
     line-height: 1.8;
     margin-bottom: 3rem;
     max-width: 700px;
@@ -289,12 +332,13 @@ body::before {
     align-items: flex-start;
     gap: 0.75rem;
     padding: 1rem;
-    background: var(--blur-bg);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 8px;
     box-shadow: var(--shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .feature-item:hover {
@@ -312,51 +356,70 @@ body::before {
 }
 
 .feature-item span:last-child {
-    color: var(--text-dark);
+    color: #e5e7eb;
     font-size: 1rem;
     line-height: 1.6;
 }
 
 .about-bottom {
-    background: var(--blur-bg);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     padding: 3rem;
     border-radius: 12px;
     box-shadow: var(--shadow-md);
     text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .about-bottom h3 {
     font-size: 1.75rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
-    color: var(--text-dark);
+    color: #d1d5db;
     text-align: center;
 }
 
 .about-bottom p {
-    color: var(--text-light);
+    color: #e5e7eb;
     line-height: 1.8;
     margin-bottom: 1rem;
 }
 
 /* Support Section */
 .support-section {
-    background: var(--blur-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 2rem;
-    border-radius: 12px;
-    margin-top: 2rem;
-    box-shadow: var(--shadow-lg);
+    background-color: rgba(0, 0, 0, 0.25) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    padding: 2rem !important;
+    border-radius: 12px !important;
+    margin-top: 2rem !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.support-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.5) 50%, 
+        transparent
+    );
+    pointer-events: none;
 }
 
 .support-section h2 {
     font-size: 2rem;
     font-weight: 700;
     margin-bottom: 2rem;
-    color: var(--text-dark);
+    color: #d1d5db;
     text-align: left;
 }
 
@@ -375,7 +438,7 @@ body::before {
 
 .form-group label {
     font-weight: 600;
-    color: var(--text-dark);
+    color: #e5e7eb;
     font-size: 0.95rem;
 }
 
@@ -383,20 +446,43 @@ body::before {
 .form-group select,
 .form-group textarea {
     padding: 12px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 8px;
     font-size: 1rem;
     font-family: inherit;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    background-color: var(--bg-white);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #e5e7eb;
+    box-sizing: border-box;
+    box-shadow: 0 0 0 3px transparent;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: rgba(229, 231, 235, 0.6);
+}
+
+/* Hide browser extension icons (LastPass, etc.) */
+input[data-lastpass-icon-root],
+input[data-lastpass-root],
+span[data-lastpass-icon-root] {
+    display: none !important;
+}
+
+.form-group input::-webkit-contacts-auto-fill-button,
+.form-group input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border: 1px solid var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(234, 255, 97, 0.2);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 .form-group textarea {
@@ -459,17 +545,17 @@ body::before {
 
 /* Footer */
 .footer {
-    background: var(--blur-bg);
+    background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     padding: 2rem 0;
     text-align: center;
-    border-top: 1px solid rgba(229, 231, 235, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     margin-top: auto;
 }
 
 .footer p {
-    color: var(--text-light);
+    color: #e5e7eb;
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
 }
@@ -479,7 +565,7 @@ body::before {
 }
 
 .footer-links a {
-    color: var(--text-dark);
+    color: #e5e7eb;
     text-decoration: none;
     font-size: 0.9rem;
     transition: color 0.3s ease;
@@ -492,7 +578,7 @@ body::before {
 }
 
 .footer-links span {
-    color: var(--text-light);
+    color: #9ca3af;
     margin: 0 0.5rem;
 }
 
