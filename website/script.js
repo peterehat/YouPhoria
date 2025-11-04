@@ -42,13 +42,6 @@ function switchBackground() {
 
 // Initialize backgrounds on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Supabase client
-    if (typeof supabase !== 'undefined') {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } else {
-        console.error('Supabase library not loaded');
-    }
-    
     initBackgrounds();
     // Switch background every 8 seconds
     setInterval(switchBackground, 8000);
@@ -70,6 +63,17 @@ document.addEventListener('DOMContentLoaded', function() {
     handleHashModal();
     
     // Phone number formatting is initialized in a separate DOMContentLoaded handler above
+});
+
+// Initialize Supabase after page fully loads (ensures library is available)
+window.addEventListener('load', function() {
+    // Try to initialize Supabase client
+    if (!initSupabase()) {
+        // Try again after a short delay if it didn't work
+        setTimeout(function() {
+            initSupabase();
+        }, 1000);
+    }
 });
 
 // Rotating screenshots with fan-out effect
@@ -226,8 +230,23 @@ document.addEventListener('DOMContentLoaded', function() {
 const SUPABASE_URL = 'https://empmaiqjpyhanrpuabou.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtcG1haXFqcHloYW5ycHVhYm91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3MTU1MjAsImV4cCI6MjA3NzI5MTUyMH0.rRZsoyrEfvkNiBkOjBUQPjw38_bhIOBJarrjwusWXmM';
 
-// Initialize Supabase client (will be initialized after DOM loads)
+// Initialize Supabase client (will be initialized after DOM and library loads)
 let supabaseClient = null;
+
+// Function to initialize Supabase client
+function initSupabase() {
+    if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase client initialized');
+            return true;
+        } catch (error) {
+            console.error('Error initializing Supabase:', error);
+            return false;
+        }
+    }
+    return false;
+}
 
 // Form submission handling
 const contactForm = document.getElementById('contactForm');
@@ -250,41 +269,66 @@ if (contactForm) {
         const referral = formData.get('referral');
         
         try {
-            // Check if Supabase client is initialized
-            if (!supabaseClient) {
-                throw new Error('Database connection not available. Please refresh the page and try again.');
-            }
-            
-            // Submit to Supabase
-            const { data, error } = await supabaseClient
-                .from('vip_early_adopters')
-                .insert([
-                    {
-                        name: name,
-                        email: email,
-                        phone: phone,
-                        referral_source: referral,
-                        submitted_at: new Date().toISOString()
+            // Try to submit to Supabase first
+            if (supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('vip_early_adopters')
+                        .insert([
+                            {
+                                name: name,
+                                email: email,
+                                phone: phone,
+                                referral_source: referral,
+                                submitted_at: new Date().toISOString()
+                            }
+                        ])
+                        .select();
+                    
+                    if (error) {
+                        console.warn('Supabase error:', error);
+                        // If table doesn't exist (404), fall through to Netlify
+                        if (error.code === 'PGRST116' || error.message.includes('404')) {
+                            throw new Error('Table not found - using Netlify fallback');
+                        }
+                        throw error;
                     }
-                ])
-                .select();
-            
-            if (error) {
-                throw error;
+                    
+                    // Success! Show message and reset form
+                    if (formSuccess) {
+                        formSuccess.style.display = 'block';
+                        formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
+                        formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                    contactForm.reset();
+                    return; // Success, exit early
+                } catch (supabaseError) {
+                    console.warn('Supabase submission failed, trying Netlify:', supabaseError);
+                    // Fall through to Netlify fallback
+                }
             }
             
-            // Show success message
-            if (formSuccess) {
-                formSuccess.style.display = 'block';
-                formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
-                formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Fallback to Netlify form submission
+            const formData = new FormData(contactForm);
+            const response = await fetch('/', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                // Success with Netlify
+                if (formSuccess) {
+                    formSuccess.style.display = 'block';
+                    formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
+                    formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                contactForm.reset();
+                
+                // Redirect to success page
+                window.location.href = '/?form-submitted=true';
+            } else {
+                throw new Error('Form submission failed');
             }
-            
-            // Reset form
-            contactForm.reset();
-            
-            // Also submit to Netlify as backup (remove data-netlify if you don't want this)
-            // Netlify will handle it automatically if data-netlify is present
             
         } catch (error) {
             console.error('Error submitting form:', error);
