@@ -63,8 +63,18 @@
                         <div class="support-section">
                             <h2>Get Early VIP Access</h2>
                     
-                    <form id="contactForm" class="contact-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field">
-                        <input type="hidden" name="form-name" value="contact">
+                    <!-- Hidden form for Netlify to detect at build time -->
+                    <form name="vip-signup" netlify netlify-honeypot="bot-field" hidden>
+                        <input type="text" name="name" />
+                        <input type="email" name="email" />
+                        <input type="tel" name="phone" />
+                        <select name="referral">
+                            <option value="Social Media">Social Media</option>
+                        </select>
+                    </form>
+                    
+                    <form id="contactForm" class="contact-form" name="vip-signup" method="POST">
+                        <input type="hidden" name="form-name" value="vip-signup">
                         <p class="hidden">
                             <label>Don't fill this out if you're human: <input name="bot-field" /></label>
                         </p>

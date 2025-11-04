@@ -316,12 +316,12 @@ if (contactForm) {
                     // Submit to Netlify Forms via fetch
                     try {
                         const netlifyFormData = new FormData(contactForm);
+                        // Ensure form-name is set for Netlify
+                        netlifyFormData.set('form-name', 'vip-signup');
+                        
                         const response = await fetch('/', {
                             method: 'POST',
-                            body: netlifyFormData,
-                            headers: {
-                                'Accept': 'text/html'
-                            }
+                            body: netlifyFormData
                         });
                         
                         if (response.ok || response.redirected) {
