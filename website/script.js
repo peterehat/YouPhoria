@@ -237,8 +237,15 @@ let supabaseClient = null;
 function initSupabase() {
     if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
         try {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                auth: {
+                    autoRefreshToken: false,
+                    persistSession: false,
+                    detectSessionInUrl: false
+                }
+            });
             console.log('Supabase client initialized');
+            console.log('Client auth settings:', supabaseClient.auth);
             return true;
         } catch (error) {
             console.error('Error initializing Supabase:', error);

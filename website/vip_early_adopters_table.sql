@@ -19,7 +19,11 @@ CREATE INDEX IF NOT EXISTS idx_vip_early_adopters_email ON public.vip_early_adop
 -- Create an index on submitted_at for sorting by date
 CREATE INDEX IF NOT EXISTS idx_vip_early_adopters_submitted_at ON public.vip_early_adopters(submitted_at DESC);
 
--- Enable Row Level Security (optional - you may want to disable this for public form submissions)
+-- Grant INSERT permission to anon role
+GRANT USAGE ON SCHEMA public TO anon;
+GRANT INSERT ON public.vip_early_adopters TO anon;
+
+-- Enable Row Level Security
 ALTER TABLE public.vip_early_adopters ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies if they exist
@@ -27,11 +31,11 @@ DROP POLICY IF EXISTS "Allow public insert on vip_early_adopters" ON public.vip_
 DROP POLICY IF EXISTS "Allow authenticated users to read vip_early_adopters" ON public.vip_early_adopters;
 
 -- Policy to allow anyone to insert (for form submissions)
--- Using public role to allow all users including anonymous
+-- Using anon role explicitly
 CREATE POLICY "Allow public insert on vip_early_adopters"
   ON public.vip_early_adopters
   FOR INSERT
-  TO public
+  TO anon
   WITH CHECK (true);
 
 -- Policy to allow authenticated users to read all submissions (optional - adjust based on your needs)
