@@ -20,7 +20,8 @@
         "NSHealthUpdateUsageDescription": "YouPhoria needs permission to write health data to help you track your wellness journey."
       },
       "entitlements": {
-        "com.apple.developer.healthkit": true
+        "com.apple.developer.healthkit": true,
+        "com.apple.developer.healthkit.access": []
       },
       "buildNumber": "7"
     },

@@ -23,7 +23,7 @@ export default function Background({
 
   return (
     <ImageBackground source={chosenSource} style={[styles.background, style]} resizeMode={resizeMode} blurRadius={blurRadius}>
-      <View style={[styles.overlay, { backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})` }]} />
+      <View style={[styles.overlay, { backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})` }]} pointerEvents="none" />
       {children}
     </ImageBackground>
   );

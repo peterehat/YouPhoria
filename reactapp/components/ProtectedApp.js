@@ -19,7 +19,7 @@ const ProtectedApp = () => {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'Home':
-        return <HomeScreen />;
+        return <HomeScreen onNavigate={handleNavigation} />;
       case 'Insights':
         return <InsightsScreen />;
       case 'Data':
@@ -29,7 +29,7 @@ const ProtectedApp = () => {
       case 'Apps':
         return <AppsScreen />;
       default:
-        return <HomeScreen />;
+        return <HomeScreen onNavigate={handleNavigation} />;
     }
   };
 

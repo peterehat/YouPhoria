@@ -21,7 +21,7 @@ import ConnectButton from './ConnectButton';
 import Background from './Background';
 import useAuthStore from '../store/authStore';
 
-export default function HomeScreen() {
+export default function HomeScreen({ onNavigate }) {
   const [healthQuestion, setHealthQuestion] = useState('');
   const [showResponse, setShowResponse] = useState(false);
   const [responseText, setResponseText] = useState('');
@@ -173,16 +173,15 @@ export default function HomeScreen() {
   };
 
   const handleDataPress = () => {
-    console.log('Data button pressed');
+    onNavigate?.('Data');
   };
 
   const handleDevicesPress = () => {
-    console.log('Devices button pressed');
+    onNavigate?.('Devices');
   };
 
   const handleAppsPress = () => {
-    // Navigation is now handled by BottomNavigation component
-    console.log('Navigate to Apps');
+    onNavigate?.('Apps');
   };
 
   const handleLogout = () => {

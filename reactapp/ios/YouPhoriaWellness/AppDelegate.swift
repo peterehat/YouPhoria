@@ -27,13 +27,6 @@ public class AppDelegate: ExpoAppDelegate {
       withModuleName: "main",
       in: window,
       launchOptions: launchOptions)
-    
-    // Initialize HealthKit background observers
-    #if canImport(RNAppleHealthKit)
-    if let bridge = factory.bridge {
-      RCTAppleHealthKit().initializeBackgroundObservers(bridge)
-    }
-    #endif
 #endif
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)

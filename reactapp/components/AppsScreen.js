@@ -145,16 +145,8 @@ export default function AppsScreen() {
         return;
       }
 
-      // Check if native module is available
-      if (!NativeModules.AppleHealthKit) {
-        console.error('AppleHealthKit native module not found!');
-        Alert.alert(
-          'HealthKit Not Available',
-          'The HealthKit native module is not properly loaded. Please rebuild the app with "npx expo run:ios".',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
+      // The Kingstinct HealthKit package uses NitroModules, so we don't need to check NativeModules
+      // The module availability is checked when we try to call it
 
       // Connect
       setIsLoading(true);
@@ -181,6 +173,12 @@ export default function AppsScreen() {
         console.error('Error stack:', error.stack);
         
         let errorMessage = 'Failed to connect to Apple Health. Please try again.';
+        const diagnostics = {
+          platform: Platform.OS,
+          appOwnership: Constants?.appOwnership,
+          errorMessage: error?.message,
+          errorStack: error?.stack,
+        };
         
         if (error.message.includes('not available')) {
           errorMessage = 'HealthKit native module is not available. Please ensure the app is built with "npx expo run:ios".';
@@ -196,7 +194,7 @@ export default function AppsScreen() {
         
         Alert.alert(
           'Connection Failed',
-          errorMessage,
+          `${errorMessage}\n\nDiagnostics:\n${JSON.stringify(diagnostics, null, 2)}`,
           [{ text: 'OK' }]
         );
       } finally {
@@ -342,15 +340,181 @@ export default function AppsScreen() {
           <ScrollView style={styles.modalContent}>
             {healthData ? (
               <View>
-                <Text style={styles.dataSectionTitle}>Available Health Metrics:</Text>
-                {Object.entries(healthData).map(([key, value]) => (
-                  <View key={key} style={styles.dataItem}>
-                    <Text style={styles.dataLabel}>{key}:</Text>
-                    <Text style={styles.dataValue}>
-                      {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                {/* Summary Section */}
+                {healthData.summary && (
+                  <View style={styles.summaryCard}>
+                    <Text style={styles.summaryTitle}>📊 Data Summary</Text>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Total Metrics:</Text>
+                      <Text style={styles.summaryValue}>{healthData.summary.totalMetrics}</Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Total Data Points:</Text>
+                      <Text style={styles.summaryValue}>{healthData.summary.totalDataPoints}</Text>
+                    </View>
+                    <View style={styles.summaryRow}>
+                      <Text style={styles.summaryLabel}>Categories:</Text>
+                      <Text style={styles.summaryValue}>{healthData.summary.categories?.join(', ') || 'None'}</Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Activity Section */}
+                {healthData.activity && healthData.activity.length > 0 && (
+                  <View style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>🏃 Activity & Fitness</Text>
+                    {healthData.activity.map((metric, index) => (
+                      <View key={index} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{metric.label}</Text>
+                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                        {metric.data && metric.data.length > 0 && (
+                          <Text style={styles.metricLatest}>
+                            Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Heart Section */}
+                {healthData.heart && healthData.heart.length > 0 && (
+                  <View style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>❤️ Heart</Text>
+                    {healthData.heart.map((metric, index) => (
+                      <View key={index} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{metric.label}</Text>
+                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                        {metric.data && metric.data.length > 0 && (
+                          <Text style={styles.metricLatest}>
+                            Latest: {metric.data[0]?.quantity?.toFixed(0) || 'N/A'} {metric.data[0]?.unit || 'bpm'}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Body Section */}
+                {healthData.body && healthData.body.length > 0 && (
+                  <View style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>⚖️ Body Measurements</Text>
+                    {healthData.body.map((metric, index) => (
+                      <View key={index} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{metric.label}</Text>
+                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                        {metric.data && metric.data.length > 0 && (
+                          <Text style={styles.metricLatest}>
+                            Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Vitals Section */}
+                {healthData.vitals && healthData.vitals.length > 0 && (
+                  <View style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>🩺 Vitals</Text>
+                    {healthData.vitals.map((metric, index) => (
+                      <View key={index} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{metric.label}</Text>
+                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                        {metric.data && metric.data.length > 0 && (
+                          <Text style={styles.metricLatest}>
+                            Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || ''}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Nutrition Section */}
+                {healthData.nutrition && healthData.nutrition.length > 0 && (
+                  <View style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>🍎 Nutrition</Text>
+                    {healthData.nutrition.map((metric, index) => (
+                      <View key={index} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{metric.label}</Text>
+                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                        {metric.data && metric.data.length > 0 && (
+                          <Text style={styles.metricLatest}>
+                            Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || ''}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Sleep Section */}
+                {healthData.sleep && healthData.sleep.length > 0 && (
+                  <View style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>😴 Sleep & Mindfulness</Text>
+                    {healthData.sleep.map((metric, index) => (
+                      <View key={index} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{metric.label}</Text>
+                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Mobility Section */}
+                {healthData.mobility && healthData.mobility.length > 0 && (
+                  <View style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>🚶 Mobility</Text>
+                    {healthData.mobility.map((metric, index) => (
+                      <View key={index} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{metric.label}</Text>
+                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                        {metric.data && metric.data.length > 0 && (
+                          <Text style={styles.metricLatest}>
+                            Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Hearing Section */}
+                {healthData.hearing && healthData.hearing.length > 0 && (
+                  <View style={styles.categorySection}>
+                    <Text style={styles.categoryTitle}>🎧 Hearing</Text>
+                    {healthData.hearing.map((metric, index) => (
+                      <View key={index} style={styles.metricCard}>
+                        <Text style={styles.metricLabel}>{metric.label}</Text>
+                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                        {metric.data && metric.data.length > 0 && (
+                          <Text style={styles.metricLatest}>
+                            Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || 'dB'}
+                          </Text>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Last Updated */}
+                {healthData.lastUpdated && (
+                  <View style={styles.timestampContainer}>
+                    <Text style={styles.timestampText}>
+                      Last updated: {new Date(healthData.lastUpdated).toLocaleString()}
                     </Text>
                   </View>
-                ))}
+                )}
+
+                {/* No Data Message */}
+                {healthData.summary && healthData.summary.totalMetrics === 0 && (
+                  <View style={styles.noDataContainer}>
+                    <Text style={styles.noDataText}>
+                      No health data found for the last 7 days. Add some data in the Health app or check your permissions.
+                    </Text>
+                  </View>
+                )}
               </View>
             ) : (
               <Text style={styles.noDataText}>No health data available</Text>
@@ -674,5 +838,93 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     textAlign: 'center',
     marginTop: 40,
+  },
+  summaryCard: {
+    backgroundColor: 'rgba(234, 255, 97, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 255, 97, 0.3)',
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    fontWeight: '500',
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: '#1f2937',
+    fontWeight: '600',
+  },
+  categorySection: {
+    marginBottom: 24,
+  },
+  categoryTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 12,
+  },
+  metricCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(31, 41, 55, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  metricLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  metricCount: {
+    fontSize: 13,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  metricLatest: {
+    fontSize: 14,
+    color: '#059669',
+    fontWeight: '500',
+  },
+  timestampContainer: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(31, 41, 55, 0.1)',
+  },
+  timestampText: {
+    fontSize: 12,
+    color: '#9ca3af',
+    textAlign: 'center',
+  },
+  noDataContainer: {
+    padding: 20,
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
   },
 });

@@ -1,114 +1,161 @@
-import { Platform, NativeModules } from 'react-native';
-import AppleHealthKit, { HealthValue, HealthKitPermissions } from 'react-native-health';
+import { Platform } from 'react-native';
+import {
+  requestAuthorization,
+  isHealthDataAvailable,
+  queryQuantitySamples,
+  queryCategorySamples,
+} from '@kingstinct/react-native-healthkit';
 
 // Toggle verbose HealthKit logging here
 const DEBUG_HEALTHKIT = __DEV__ && false;
 
-// Debug: Check if native module is available (dev-only)
-if (DEBUG_HEALTHKIT) {
-  console.log('All NativeModules:', Object.keys(NativeModules));
-  console.log('NativeModules.AppleHealthKit:', NativeModules.AppleHealthKit);
-  console.log('NativeModules.RCTAppleHealthKit:', NativeModules.RCTAppleHealthKit);
-  console.log('HealthKit Available Methods:', AppleHealthKit);
-}
+// HealthKit Type Identifiers (string literals as per Kingstinct API)
+// Comprehensive set for maximum data access
+const HKQuantityTypeIdentifier = {
+  // Activity & Fitness
+  stepCount: 'HKQuantityTypeIdentifierStepCount',
+  distanceWalkingRunning: 'HKQuantityTypeIdentifierDistanceWalkingRunning',
+  distanceCycling: 'HKQuantityTypeIdentifierDistanceCycling',
+  distanceSwimming: 'HKQuantityTypeIdentifierDistanceSwimming',
+  distanceWheelchair: 'HKQuantityTypeIdentifierDistanceWheelchair',
+  pushCount: 'HKQuantityTypeIdentifierPushCount',
+  flightsClimbed: 'HKQuantityTypeIdentifierFlightsClimbed',
+  swimmingStrokeCount: 'HKQuantityTypeIdentifierSwimmingStrokeCount',
+  activeEnergyBurned: 'HKQuantityTypeIdentifierActiveEnergyBurned',
+  basalEnergyBurned: 'HKQuantityTypeIdentifierBasalEnergyBurned',
+  nikeFuel: 'HKQuantityTypeIdentifierNikeFuel',
+  appleExerciseTime: 'HKQuantityTypeIdentifierAppleExerciseTime',
+  appleStandTime: 'HKQuantityTypeIdentifierAppleStandTime',
+  
+  // Heart
+  heartRate: 'HKQuantityTypeIdentifierHeartRate',
+  restingHeartRate: 'HKQuantityTypeIdentifierRestingHeartRate',
+  walkingHeartRateAverage: 'HKQuantityTypeIdentifierWalkingHeartRateAverage',
+  heartRateVariabilitySDNN: 'HKQuantityTypeIdentifierHeartRateVariabilitySDNN',
+  heartRateRecoveryOneMinute: 'HKQuantityTypeIdentifierHeartRateRecoveryOneMinute',
+  atrialFibrillationBurden: 'HKQuantityTypeIdentifierAtrialFibrillationBurden',
+  vo2Max: 'HKQuantityTypeIdentifierVO2Max',
+  
+  // Body Measurements
+  height: 'HKQuantityTypeIdentifierHeight',
+  bodyMass: 'HKQuantityTypeIdentifierBodyMass',
+  bodyMassIndex: 'HKQuantityTypeIdentifierBodyMassIndex',
+  bodyFatPercentage: 'HKQuantityTypeIdentifierBodyFatPercentage',
+  leanBodyMass: 'HKQuantityTypeIdentifierLeanBodyMass',
+  waistCircumference: 'HKQuantityTypeIdentifierWaistCircumference',
+  
+  // Vitals
+  bloodPressureSystolic: 'HKQuantityTypeIdentifierBloodPressureSystolic',
+  bloodPressureDiastolic: 'HKQuantityTypeIdentifierBloodPressureDiastolic',
+  bloodGlucose: 'HKQuantityTypeIdentifierBloodGlucose',
+  oxygenSaturation: 'HKQuantityTypeIdentifierOxygenSaturation',
+  respiratoryRate: 'HKQuantityTypeIdentifierRespiratoryRate',
+  bodyTemperature: 'HKQuantityTypeIdentifierBodyTemperature',
+  basalBodyTemperature: 'HKQuantityTypeIdentifierBasalBodyTemperature',
+  bloodAlcoholContent: 'HKQuantityTypeIdentifierBloodAlcoholContent',
+  peripheralPerfusionIndex: 'HKQuantityTypeIdentifierPeripheralPerfusionIndex',
+  
+  // Nutrition
+  dietaryFatTotal: 'HKQuantityTypeIdentifierDietaryFatTotal',
+  dietaryFatPolyunsaturated: 'HKQuantityTypeIdentifierDietaryFatPolyunsaturated',
+  dietaryFatMonounsaturated: 'HKQuantityTypeIdentifierDietaryFatMonounsaturated',
+  dietaryFatSaturated: 'HKQuantityTypeIdentifierDietaryFatSaturated',
+  dietaryCholesterol: 'HKQuantityTypeIdentifierDietaryCholesterol',
+  dietarySodium: 'HKQuantityTypeIdentifierDietarySodium',
+  dietaryCarbohydrates: 'HKQuantityTypeIdentifierDietaryCarbohydrates',
+  dietaryFiber: 'HKQuantityTypeIdentifierDietaryFiber',
+  dietarySugar: 'HKQuantityTypeIdentifierDietarySugar',
+  dietaryEnergyConsumed: 'HKQuantityTypeIdentifierDietaryEnergyConsumed',
+  dietaryProtein: 'HKQuantityTypeIdentifierDietaryProtein',
+  dietaryVitaminA: 'HKQuantityTypeIdentifierDietaryVitaminA',
+  dietaryVitaminB6: 'HKQuantityTypeIdentifierDietaryVitaminB6',
+  dietaryVitaminB12: 'HKQuantityTypeIdentifierDietaryVitaminB12',
+  dietaryVitaminC: 'HKQuantityTypeIdentifierDietaryVitaminC',
+  dietaryVitaminD: 'HKQuantityTypeIdentifierDietaryVitaminD',
+  dietaryVitaminE: 'HKQuantityTypeIdentifierDietaryVitaminE',
+  dietaryVitaminK: 'HKQuantityTypeIdentifierDietaryVitaminK',
+  dietaryCalcium: 'HKQuantityTypeIdentifierDietaryCalcium',
+  dietaryIron: 'HKQuantityTypeIdentifierDietaryIron',
+  dietaryThiamin: 'HKQuantityTypeIdentifierDietaryThiamin',
+  dietaryRiboflavin: 'HKQuantityTypeIdentifierDietaryRiboflavin',
+  dietaryNiacin: 'HKQuantityTypeIdentifierDietaryNiacin',
+  dietaryFolate: 'HKQuantityTypeIdentifierDietaryFolate',
+  dietaryBiotin: 'HKQuantityTypeIdentifierDietaryBiotin',
+  dietaryPantothenicAcid: 'HKQuantityTypeIdentifierDietaryPantothenicAcid',
+  dietaryPhosphorus: 'HKQuantityTypeIdentifierDietaryPhosphorus',
+  dietaryIodine: 'HKQuantityTypeIdentifierDietaryIodine',
+  dietaryMagnesium: 'HKQuantityTypeIdentifierDietaryMagnesium',
+  dietaryZinc: 'HKQuantityTypeIdentifierDietaryZinc',
+  dietarySelenium: 'HKQuantityTypeIdentifierDietarySelenium',
+  dietaryCopper: 'HKQuantityTypeIdentifierDietaryCopper',
+  dietaryManganese: 'HKQuantityTypeIdentifierDietaryManganese',
+  dietaryChromium: 'HKQuantityTypeIdentifierDietaryChromium',
+  dietaryMolybdenum: 'HKQuantityTypeIdentifierDietaryMolybdenum',
+  dietaryChloride: 'HKQuantityTypeIdentifierDietaryChloride',
+  dietaryPotassium: 'HKQuantityTypeIdentifierDietaryPotassium',
+  dietaryCaffeine: 'HKQuantityTypeIdentifierDietaryCaffeine',
+  dietaryWater: 'HKQuantityTypeIdentifierDietaryWater',
+  
+  // UV Exposure
+  uvExposure: 'HKQuantityTypeIdentifierUVExposure',
+  
+  // Hearing
+  environmentalAudioExposure: 'HKQuantityTypeIdentifierEnvironmentalAudioExposure',
+  headphoneAudioExposure: 'HKQuantityTypeIdentifierHeadphoneAudioExposure',
+  
+  // Mobility
+  walkingSpeed: 'HKQuantityTypeIdentifierWalkingSpeed',
+  walkingStepLength: 'HKQuantityTypeIdentifierWalkingStepLength',
+  walkingAsymmetryPercentage: 'HKQuantityTypeIdentifierWalkingAsymmetryPercentage',
+  walkingDoubleSupportPercentage: 'HKQuantityTypeIdentifierWalkingDoubleSupportPercentage',
+  sixMinuteWalkTestDistance: 'HKQuantityTypeIdentifierSixMinuteWalkTestDistance',
+  stairAscentSpeed: 'HKQuantityTypeIdentifierStairAscentSpeed',
+  stairDescentSpeed: 'HKQuantityTypeIdentifierStairDescentSpeed',
+  
+  // Respiratory
+  forcedVitalCapacity: 'HKQuantityTypeIdentifierForcedVitalCapacity',
+  forcedExpiratoryVolume1: 'HKQuantityTypeIdentifierForcedExpiratoryVolume1',
+  peakExpiratoryFlowRate: 'HKQuantityTypeIdentifierPeakExpiratoryFlowRate',
+  numberOfTimesFallen: 'HKQuantityTypeIdentifierNumberOfTimesFallen',
+  inhalerUsage: 'HKQuantityTypeIdentifierInhalerUsage',
+  
+  // Reproductive Health
+  numberOfAlcoholicBeverages: 'HKQuantityTypeIdentifierNumberOfAlcoholicBeverages',
+};
 
-// Define all available HealthKit permissions
-const permissions = {
-  permissions: {
-    read: [
-      AppleHealthKit.Constants.Permissions.Steps,
-      AppleHealthKit.Constants.Permissions.HeartRate,
-      AppleHealthKit.Constants.Permissions.SleepAnalysis,
-      AppleHealthKit.Constants.Permissions.Workout,
-      AppleHealthKit.Constants.Permissions.ActiveEnergyBurned,
-      AppleHealthKit.Constants.Permissions.BasalEnergyBurned,
-      AppleHealthKit.Constants.Permissions.Weight,
-      AppleHealthKit.Constants.Permissions.Height,
-      AppleHealthKit.Constants.Permissions.BodyMassIndex,
-      AppleHealthKit.Constants.Permissions.BodyFatPercentage,
-      AppleHealthKit.Constants.Permissions.LeanBodyMass,
-      AppleHealthKit.Constants.Permissions.BloodPressureSystolic,
-      AppleHealthKit.Constants.Permissions.BloodPressureDiastolic,
-      AppleHealthKit.Constants.Permissions.BloodGlucose,
-      AppleHealthKit.Constants.Permissions.OxygenSaturation,
-      AppleHealthKit.Constants.Permissions.RespiratoryRate,
-      AppleHealthKit.Constants.Permissions.BloodType,
-      AppleHealthKit.Constants.Permissions.DateOfBirth,
-      AppleHealthKit.Constants.Permissions.BiologicalSex,
-      AppleHealthKit.Constants.Permissions.WalkingHeartRateAverage,
-      AppleHealthKit.Constants.Permissions.RestingHeartRate,
-      AppleHealthKit.Constants.Permissions.HeartRateVariabilitySDNN,
-      AppleHealthKit.Constants.Permissions.HeartRateVariabilityRMSSD,
-      AppleHealthKit.Constants.Permissions.VO2Max,
-      AppleHealthKit.Constants.Permissions.DistanceWalkingRunning,
-      AppleHealthKit.Constants.Permissions.DistanceCycling,
-      AppleHealthKit.Constants.Permissions.DistanceSwimming,
-      AppleHealthKit.Constants.Permissions.FlightsClimbed,
-      AppleHealthKit.Constants.Permissions.StepCount,
-      AppleHealthKit.Constants.Permissions.DistanceWheelchair,
-      AppleHealthKit.Constants.Permissions.BasalBodyTemperature,
-      AppleHealthKit.Constants.Permissions.BloodAlcoholContent,
-      AppleHealthKit.Constants.Permissions.BloodPressure,
-      AppleHealthKit.Constants.Permissions.BloodType,
-      AppleHealthKit.Constants.Permissions.BMI,
-      AppleHealthKit.Constants.Permissions.BodyFatPercentage,
-      AppleHealthKit.Constants.Permissions.BodyMassIndex,
-      AppleHealthKit.Constants.Permissions.BoneDensity,
-      AppleHealthKit.Constants.Permissions.CervicalMucusQuality,
-      AppleHealthKit.Constants.Permissions.DietaryBiotin,
-      AppleHealthKit.Constants.Permissions.DietaryCaffeine,
-      AppleHealthKit.Constants.Permissions.DietaryCalcium,
-      AppleHealthKit.Constants.Permissions.DietaryCarbohydrates,
-      AppleHealthKit.Constants.Permissions.DietaryChloride,
-      AppleHealthKit.Constants.Permissions.DietaryCholesterol,
-      AppleHealthKit.Constants.Permissions.DietaryChromium,
-      AppleHealthKit.Constants.Permissions.DietaryCopper,
-      AppleHealthKit.Constants.Permissions.DietaryEnergyConsumed,
-      AppleHealthKit.Constants.Permissions.DietaryFatMonounsaturated,
-      AppleHealthKit.Constants.Permissions.DietaryFatPolyunsaturated,
-      AppleHealthKit.Constants.Permissions.DietaryFatSaturated,
-      AppleHealthKit.Constants.Permissions.DietaryFatTotal,
-      AppleHealthKit.Constants.Permissions.DietaryFiber,
-      AppleHealthKit.Constants.Permissions.DietaryFolate,
-      AppleHealthKit.Constants.Permissions.DietaryIodine,
-      AppleHealthKit.Constants.Permissions.DietaryIron,
-      AppleHealthKit.Constants.Permissions.DietaryMagnesium,
-      AppleHealthKit.Constants.Permissions.DietaryManganese,
-      AppleHealthKit.Constants.Permissions.DietaryMolybdenum,
-      AppleHealthKit.Constants.Permissions.DietaryNiacin,
-      AppleHealthKit.Constants.Permissions.DietaryPantothenicAcid,
-      AppleHealthKit.Constants.Permissions.DietaryPhosphorus,
-      AppleHealthKit.Constants.Permissions.DietaryPotassium,
-      AppleHealthKit.Constants.Permissions.DietaryProtein,
-      AppleHealthKit.Constants.Permissions.DietaryRiboflavin,
-      AppleHealthKit.Constants.Permissions.DietarySelenium,
-      AppleHealthKit.Constants.Permissions.DietarySodium,
-      AppleHealthKit.Constants.Permissions.DietarySugar,
-      AppleHealthKit.Constants.Permissions.DietaryThiamin,
-      AppleHealthKit.Constants.Permissions.DietaryVitaminA,
-      AppleHealthKit.Constants.Permissions.DietaryVitaminB12,
-      AppleHealthKit.Constants.Permissions.DietaryVitaminB6,
-      AppleHealthKit.Constants.Permissions.DietaryVitaminC,
-      AppleHealthKit.Constants.Permissions.DietaryVitaminD,
-      AppleHealthKit.Constants.Permissions.DietaryVitaminE,
-      AppleHealthKit.Constants.Permissions.DietaryVitaminK,
-      AppleHealthKit.Constants.Permissions.DietaryWater,
-      AppleHealthKit.Constants.Permissions.DietaryZinc,
-    ],
-    write: [
-      AppleHealthKit.Constants.Permissions.Steps,
-      AppleHealthKit.Constants.Permissions.HeartRate,
-      AppleHealthKit.Constants.Permissions.SleepAnalysis,
-      AppleHealthKit.Constants.Permissions.Workout,
-      AppleHealthKit.Constants.Permissions.ActiveEnergyBurned,
-      AppleHealthKit.Constants.Permissions.Weight,
-      AppleHealthKit.Constants.Permissions.Height,
-      AppleHealthKit.Constants.Permissions.BodyMassIndex,
-      AppleHealthKit.Constants.Permissions.BloodPressure,
-      AppleHealthKit.Constants.Permissions.BloodGlucose,
-      AppleHealthKit.Constants.Permissions.OxygenSaturation,
-    ],
-  },
+const HKCategoryTypeIdentifier = {
+  sleepAnalysis: 'HKCategoryTypeIdentifierSleepAnalysis',
+  appleStandHour: 'HKCategoryTypeIdentifierAppleStandHour',
+  cervicalMucusQuality: 'HKCategoryTypeIdentifierCervicalMucusQuality',
+  ovulationTestResult: 'HKCategoryTypeIdentifierOvulationTestResult',
+  menstrualFlow: 'HKCategoryTypeIdentifierMenstrualFlow',
+  intermenstrualBleeding: 'HKCategoryTypeIdentifierIntermenstrualBleeding',
+  sexualActivity: 'HKCategoryTypeIdentifierSexualActivity',
+  mindfulSession: 'HKCategoryTypeIdentifierMindfulSession',
+  highHeartRateEvent: 'HKCategoryTypeIdentifierHighHeartRateEvent',
+  lowHeartRateEvent: 'HKCategoryTypeIdentifierLowHeartRateEvent',
+  irregularHeartRhythmEvent: 'HKCategoryTypeIdentifierIrregularHeartRhythmEvent',
+  audioExposureEvent: 'HKCategoryTypeIdentifierAudioExposureEvent',
+  toothbrushingEvent: 'HKCategoryTypeIdentifierToothbrushingEvent',
+  lowCardioFitnessEvent: 'HKCategoryTypeIdentifierLowCardioFitnessEvent',
+  contraceptive: 'HKCategoryTypeIdentifierContraceptive',
+  lactation: 'HKCategoryTypeIdentifierLactation',
+  pregnancy: 'HKCategoryTypeIdentifierPregnancy',
+  pregnancyTestResult: 'HKCategoryTypeIdentifierPregnancyTestResult',
+  progesteroneTestResult: 'HKCategoryTypeIdentifierProgesteroneTestResult',
+  environmentalAudioExposureEvent: 'HKCategoryTypeIdentifierEnvironmentalAudioExposureEvent',
+  headphoneAudioExposureEvent: 'HKCategoryTypeIdentifierHeadphoneAudioExposureEvent',
+  handwashingEvent: 'HKCategoryTypeIdentifierHandwashingEvent',
+  appleWalkingSteadinessEvent: 'HKCategoryTypeIdentifierAppleWalkingSteadinessEvent',
+};
+
+const HKCharacteristicTypeIdentifier = {
+  biologicalSex: 'HKCharacteristicTypeIdentifierBiologicalSex',
+  dateOfBirth: 'HKCharacteristicTypeIdentifierDateOfBirth',
+  bloodType: 'HKCharacteristicTypeIdentifierBloodType',
+  fitzpatrickSkinType: 'HKCharacteristicTypeIdentifierFitzpatrickSkinType',
+  wheelchairUse: 'HKCharacteristicTypeIdentifierWheelchairUse',
+  activityMoveMode: 'HKCharacteristicTypeIdentifierActivityMoveMode',
 };
 
 class HealthKitService {
@@ -116,198 +163,296 @@ class HealthKitService {
     this.isInitialized = false;
   }
 
-  // Initialize HealthKit
-  async initialize() {
-    if (Platform.OS !== 'ios') {
-      throw new Error('HealthKit is only available on iOS devices');
-    }
-
-    // Check if native module is loaded
-    if (!AppleHealthKit || !AppleHealthKit.initHealthKit) {
-      throw new Error('HealthKit native module is not available. Please ensure react-native-health is properly linked.');
-    }
-
-    return new Promise((resolve, reject) => {
-      AppleHealthKit.initHealthKit(permissions, (error) => {
-        if (error) {
-          console.log('HealthKit initialization error:', error);
-          this.isInitialized = false;
-          reject(new Error(`HealthKit initialization failed: ${error}`));
-        } else {
-          if (DEBUG_HEALTHKIT) {
-            console.log('HealthKit initialized successfully');
-          }
-          this.isInitialized = true;
-          resolve(true);
-        }
-      });
-    });
-  }
-
-  // Check if HealthKit is available on the device
-  isAvailable() {
-    return new Promise((resolve) => {
-      // Check if native module is loaded
-      if (!AppleHealthKit || !AppleHealthKit.isAvailable) {
-        console.log('HealthKit native module is not loaded');
-        resolve(false);
-        return;
-      }
-
-      AppleHealthKit.isAvailable((error, results) => {
-        if (error) {
-          console.log('HealthKit availability check error:', error);
-          resolve(false);
-        } else {
-          if (DEBUG_HEALTHKIT) {
-            console.log('HealthKit availability:', results);
-          }
-          resolve(results);
-        }
-      });
-    });
-  }
-
-  // Request permissions
+  // Initialize HealthKit and request permissions
   async requestPermissions() {
     try {
       if (Platform.OS !== 'ios') {
         throw new Error('HealthKit is only available on iOS devices');
       }
 
-      const isAvailable = await this.isAvailable();
-      if (!isAvailable) {
-        throw new Error('HealthKit is not available on this device');
+      if (DEBUG_HEALTHKIT) {
+        console.log('[HealthKit] Requesting permissions...');
       }
 
-      await this.initialize();
-      return true;
+      // Define read permissions (comprehensive set for maximum data access)
+      const readPermissions = [
+        // Activity & Fitness
+        HKQuantityTypeIdentifier.stepCount,
+        HKQuantityTypeIdentifier.distanceWalkingRunning,
+        HKQuantityTypeIdentifier.distanceCycling,
+        HKQuantityTypeIdentifier.distanceSwimming,
+        HKQuantityTypeIdentifier.distanceWheelchair,
+        HKQuantityTypeIdentifier.pushCount,
+        HKQuantityTypeIdentifier.flightsClimbed,
+        HKQuantityTypeIdentifier.swimmingStrokeCount,
+        HKQuantityTypeIdentifier.activeEnergyBurned,
+        HKQuantityTypeIdentifier.basalEnergyBurned,
+        HKQuantityTypeIdentifier.nikeFuel,
+        HKQuantityTypeIdentifier.appleExerciseTime,
+        HKQuantityTypeIdentifier.appleStandTime,
+        
+        // Heart
+        HKQuantityTypeIdentifier.heartRate,
+        HKQuantityTypeIdentifier.restingHeartRate,
+        HKQuantityTypeIdentifier.walkingHeartRateAverage,
+        HKQuantityTypeIdentifier.heartRateVariabilitySDNN,
+        HKQuantityTypeIdentifier.heartRateRecoveryOneMinute,
+        HKQuantityTypeIdentifier.atrialFibrillationBurden,
+        HKQuantityTypeIdentifier.vo2Max,
+        
+        // Body Measurements
+        HKQuantityTypeIdentifier.height,
+        HKQuantityTypeIdentifier.bodyMass,
+        HKQuantityTypeIdentifier.bodyMassIndex,
+        HKQuantityTypeIdentifier.bodyFatPercentage,
+        HKQuantityTypeIdentifier.leanBodyMass,
+        HKQuantityTypeIdentifier.waistCircumference,
+        
+        // Vitals
+        HKQuantityTypeIdentifier.bloodPressureSystolic,
+        HKQuantityTypeIdentifier.bloodPressureDiastolic,
+        HKQuantityTypeIdentifier.bloodGlucose,
+        HKQuantityTypeIdentifier.oxygenSaturation,
+        HKQuantityTypeIdentifier.respiratoryRate,
+        HKQuantityTypeIdentifier.bodyTemperature,
+        HKQuantityTypeIdentifier.basalBodyTemperature,
+        HKQuantityTypeIdentifier.bloodAlcoholContent,
+        HKQuantityTypeIdentifier.peripheralPerfusionIndex,
+        
+        // Nutrition
+        HKQuantityTypeIdentifier.dietaryFatTotal,
+        HKQuantityTypeIdentifier.dietaryFatPolyunsaturated,
+        HKQuantityTypeIdentifier.dietaryFatMonounsaturated,
+        HKQuantityTypeIdentifier.dietaryFatSaturated,
+        HKQuantityTypeIdentifier.dietaryCholesterol,
+        HKQuantityTypeIdentifier.dietarySodium,
+        HKQuantityTypeIdentifier.dietaryCarbohydrates,
+        HKQuantityTypeIdentifier.dietaryFiber,
+        HKQuantityTypeIdentifier.dietarySugar,
+        HKQuantityTypeIdentifier.dietaryEnergyConsumed,
+        HKQuantityTypeIdentifier.dietaryProtein,
+        HKQuantityTypeIdentifier.dietaryVitaminA,
+        HKQuantityTypeIdentifier.dietaryVitaminB6,
+        HKQuantityTypeIdentifier.dietaryVitaminB12,
+        HKQuantityTypeIdentifier.dietaryVitaminC,
+        HKQuantityTypeIdentifier.dietaryVitaminD,
+        HKQuantityTypeIdentifier.dietaryVitaminE,
+        HKQuantityTypeIdentifier.dietaryVitaminK,
+        HKQuantityTypeIdentifier.dietaryCalcium,
+        HKQuantityTypeIdentifier.dietaryIron,
+        HKQuantityTypeIdentifier.dietaryThiamin,
+        HKQuantityTypeIdentifier.dietaryRiboflavin,
+        HKQuantityTypeIdentifier.dietaryNiacin,
+        HKQuantityTypeIdentifier.dietaryFolate,
+        HKQuantityTypeIdentifier.dietaryBiotin,
+        HKQuantityTypeIdentifier.dietaryPantothenicAcid,
+        HKQuantityTypeIdentifier.dietaryPhosphorus,
+        HKQuantityTypeIdentifier.dietaryIodine,
+        HKQuantityTypeIdentifier.dietaryMagnesium,
+        HKQuantityTypeIdentifier.dietaryZinc,
+        HKQuantityTypeIdentifier.dietarySelenium,
+        HKQuantityTypeIdentifier.dietaryCopper,
+        HKQuantityTypeIdentifier.dietaryManganese,
+        HKQuantityTypeIdentifier.dietaryChromium,
+        HKQuantityTypeIdentifier.dietaryMolybdenum,
+        HKQuantityTypeIdentifier.dietaryChloride,
+        HKQuantityTypeIdentifier.dietaryPotassium,
+        HKQuantityTypeIdentifier.dietaryCaffeine,
+        HKQuantityTypeIdentifier.dietaryWater,
+        
+        // UV Exposure
+        HKQuantityTypeIdentifier.uvExposure,
+        
+        // Hearing
+        HKQuantityTypeIdentifier.environmentalAudioExposure,
+        HKQuantityTypeIdentifier.headphoneAudioExposure,
+        
+        // Mobility
+        HKQuantityTypeIdentifier.walkingSpeed,
+        HKQuantityTypeIdentifier.walkingStepLength,
+        HKQuantityTypeIdentifier.walkingAsymmetryPercentage,
+        HKQuantityTypeIdentifier.walkingDoubleSupportPercentage,
+        HKQuantityTypeIdentifier.sixMinuteWalkTestDistance,
+        HKQuantityTypeIdentifier.stairAscentSpeed,
+        HKQuantityTypeIdentifier.stairDescentSpeed,
+        
+        // Respiratory
+        HKQuantityTypeIdentifier.forcedVitalCapacity,
+        HKQuantityTypeIdentifier.forcedExpiratoryVolume1,
+        HKQuantityTypeIdentifier.peakExpiratoryFlowRate,
+        HKQuantityTypeIdentifier.numberOfTimesFallen,
+        HKQuantityTypeIdentifier.inhalerUsage,
+        
+        // Reproductive Health
+        HKQuantityTypeIdentifier.numberOfAlcoholicBeverages,
+        
+        // Sleep & Categories
+        HKCategoryTypeIdentifier.sleepAnalysis,
+        HKCategoryTypeIdentifier.appleStandHour,
+        HKCategoryTypeIdentifier.cervicalMucusQuality,
+        HKCategoryTypeIdentifier.ovulationTestResult,
+        HKCategoryTypeIdentifier.menstrualFlow,
+        HKCategoryTypeIdentifier.intermenstrualBleeding,
+        HKCategoryTypeIdentifier.sexualActivity,
+        HKCategoryTypeIdentifier.mindfulSession,
+        HKCategoryTypeIdentifier.highHeartRateEvent,
+        HKCategoryTypeIdentifier.lowHeartRateEvent,
+        HKCategoryTypeIdentifier.irregularHeartRhythmEvent,
+        HKCategoryTypeIdentifier.audioExposureEvent,
+        HKCategoryTypeIdentifier.toothbrushingEvent,
+        HKCategoryTypeIdentifier.lowCardioFitnessEvent,
+        HKCategoryTypeIdentifier.contraceptive,
+        HKCategoryTypeIdentifier.lactation,
+        HKCategoryTypeIdentifier.pregnancy,
+        HKCategoryTypeIdentifier.pregnancyTestResult,
+        HKCategoryTypeIdentifier.progesteroneTestResult,
+        HKCategoryTypeIdentifier.environmentalAudioExposureEvent,
+        HKCategoryTypeIdentifier.headphoneAudioExposureEvent,
+        HKCategoryTypeIdentifier.handwashingEvent,
+        HKCategoryTypeIdentifier.appleWalkingSteadinessEvent,
+        
+        // Characteristics
+        HKCharacteristicTypeIdentifier.biologicalSex,
+        HKCharacteristicTypeIdentifier.dateOfBirth,
+        HKCharacteristicTypeIdentifier.bloodType,
+        HKCharacteristicTypeIdentifier.fitzpatrickSkinType,
+        HKCharacteristicTypeIdentifier.wheelchairUse,
+        HKCharacteristicTypeIdentifier.activityMoveMode,
+      ];
+
+      // Define write permissions (empty for now, we're only reading)
+      const writePermissions = [];
+
+      // Request authorization (toShare, toRead)
+      const granted = await requestAuthorization(writePermissions, readPermissions);
+
+      if (granted) {
+        this.isInitialized = true;
+        
+        if (DEBUG_HEALTHKIT) {
+          console.log('[HealthKit] Permissions granted successfully');
+        }
+        
+        return true;
+      } else {
+        throw new Error('HealthKit permissions were denied');
+      }
     } catch (error) {
-      console.log('Failed to request HealthKit permissions:', error);
+      console.error('[HealthKit] Failed to request permissions:', error);
       throw error;
     }
   }
 
-  // Check authorization status for specific permissions
-  async checkAuthorizationStatus(permission) {
-    return new Promise((resolve) => {
-      AppleHealthKit.getAuthorizationStatusForType(permission, (error, results) => {
-        if (error) {
-          console.log('Authorization status check error:', error);
-          resolve(false);
-        } else {
-          resolve(results === AppleHealthKit.Constants.Permissions.Authorized);
-        }
-      });
-    });
+  // Check if HealthKit is available on the device
+  async isAvailable() {
+    try {
+      const available = isHealthDataAvailable();
+      if (DEBUG_HEALTHKIT) {
+        console.log('[HealthKit] isAvailable:', available);
+      }
+      return available;
+    } catch (error) {
+      console.error('[HealthKit] Error checking availability:', error);
+      return false;
+    }
   }
 
   // Get steps data
   async getSteps(startDate, endDate) {
-    return new Promise((resolve, reject) => {
-      const options = {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      };
-
-      AppleHealthKit.getStepCount(options, (callbackError, results) => {
-        if (callbackError) {
-          reject(callbackError);
-        } else {
-          resolve(results);
+    try {
+      const result = await queryQuantitySamples(
+        HKQuantityTypeIdentifier.stepCount,
+        {
+          from: startDate,
+          to: endDate,
         }
-      });
-    });
+      );
+      return result;
+    } catch (error) {
+      console.error('[HealthKit] Error fetching steps:', error);
+      throw error;
+    }
   }
 
   // Get heart rate data
   async getHeartRate(startDate, endDate) {
-    return new Promise((resolve, reject) => {
-      const options = {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      };
-
-      AppleHealthKit.getHeartRateSamples(options, (callbackError, results) => {
-        if (callbackError) {
-          reject(callbackError);
-        } else {
-          resolve(results);
+    try {
+      const result = await queryQuantitySamples(
+        HKQuantityTypeIdentifier.heartRate,
+        {
+          from: startDate,
+          to: endDate,
         }
-      });
-    });
+      );
+      return result;
+    } catch (error) {
+      console.error('[HealthKit] Error fetching heart rate:', error);
+      throw error;
+    }
   }
 
   // Get sleep data
   async getSleepData(startDate, endDate) {
-    return new Promise((resolve, reject) => {
-      const options = {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      };
-
-      AppleHealthKit.getSleepSamples(options, (callbackError, results) => {
-        if (callbackError) {
-          reject(callbackError);
-        } else {
-          resolve(results);
+    try {
+      const result = await queryCategorySamples(
+        HKCategoryTypeIdentifier.sleepAnalysis,
+        {
+          from: startDate,
+          to: endDate,
         }
-      });
-    });
-  }
-
-  // Get workout data
-  async getWorkouts(startDate, endDate) {
-    return new Promise((resolve, reject) => {
-      const options = {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      };
-
-      AppleHealthKit.getSamples(options, (callbackError, results) => {
-        if (callbackError) {
-          reject(callbackError);
-        } else {
-          resolve(results);
-        }
-      });
-    });
+      );
+      return result;
+    } catch (error) {
+      console.error('[HealthKit] Error fetching sleep data:', error);
+      throw error;
+    }
   }
 
   // Get weight data
   async getWeight(startDate, endDate) {
-    return new Promise((resolve, reject) => {
-      const options = {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      };
-
-      AppleHealthKit.getWeightSamples(options, (callbackError, results) => {
-        if (callbackError) {
-          reject(callbackError);
-        } else {
-          resolve(results);
+    try {
+      const result = await queryQuantitySamples(
+        HKQuantityTypeIdentifier.bodyMass,
+        {
+          from: startDate,
+          to: endDate,
         }
-      });
-    });
+      );
+      return result;
+    } catch (error) {
+      console.error('[HealthKit] Error fetching weight:', error);
+      throw error;
+    }
   }
 
-  // Get blood pressure data
-  async getBloodPressure(startDate, endDate) {
-    return new Promise((resolve, reject) => {
-      const options = {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      };
-
-      AppleHealthKit.getBloodPressureSamples(options, (callbackError, results) => {
-        if (callbackError) {
-          reject(callbackError);
-        } else {
-          resolve(results);
-        }
+  // Helper method to fetch quantity data with error handling
+  async fetchQuantityData(identifier, label, startDate, endDate) {
+    try {
+      const result = await queryQuantitySamples(identifier, {
+        from: startDate,
+        to: endDate,
       });
-    });
+      console.log(`[HealthKit] ${label}: ${result?.length || 0} samples`);
+      return { label, data: result, count: result?.length || 0 };
+    } catch (error) {
+      console.log(`[HealthKit] Error fetching ${label}:`, error.message);
+      return { label, data: [], count: 0, error: error.message };
+    }
+  }
+
+  // Helper method to fetch category data with error handling
+  async fetchCategoryData(identifier, label, startDate, endDate) {
+    try {
+      const result = await queryCategorySamples(identifier, {
+        from: startDate,
+        to: endDate,
+      });
+      console.log(`[HealthKit] ${label}: ${result?.length || 0} samples`);
+      return { label, data: result, count: result?.length || 0 };
+    } catch (error) {
+      console.log(`[HealthKit] Error fetching ${label}:`, error.message);
+      return { label, data: [], count: 0, error: error.message };
+    }
   }
 
   // Get comprehensive health data for display
@@ -319,31 +464,134 @@ class HealthKitService {
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+    if (DEBUG_HEALTHKIT) {
+      console.log('[HealthKit] Fetching comprehensive health data...');
+    }
+
     try {
-      const [steps, heartRate, sleep, workouts, weight, bloodPressure] = await Promise.allSettled([
-        this.getSteps(oneWeekAgo, now),
-        this.getHeartRate(oneWeekAgo, now),
-        this.getSleepData(oneWeekAgo, now),
-        this.getWorkouts(oneWeekAgo, now),
-        this.getWeight(oneWeekAgo, now),
-        this.getBloodPressure(oneWeekAgo, now),
+      // Fetch all quantity types in parallel
+      const quantityPromises = [
+        // Activity & Fitness
+        this.fetchQuantityData(HKQuantityTypeIdentifier.stepCount, 'Steps', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.distanceWalkingRunning, 'Distance Walking/Running', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.distanceCycling, 'Distance Cycling', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.distanceSwimming, 'Distance Swimming', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.flightsClimbed, 'Flights Climbed', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.activeEnergyBurned, 'Active Energy', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.basalEnergyBurned, 'Resting Energy', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.appleExerciseTime, 'Exercise Time', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.appleStandTime, 'Stand Time', oneWeekAgo, now),
+        
+        // Heart
+        this.fetchQuantityData(HKQuantityTypeIdentifier.heartRate, 'Heart Rate', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.restingHeartRate, 'Resting Heart Rate', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.walkingHeartRateAverage, 'Walking Heart Rate', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.heartRateVariabilitySDNN, 'Heart Rate Variability', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.vo2Max, 'VO2 Max', oneWeekAgo, now),
+        
+        // Body Measurements
+        this.fetchQuantityData(HKQuantityTypeIdentifier.height, 'Height', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.bodyMass, 'Weight', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.bodyMassIndex, 'BMI', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.bodyFatPercentage, 'Body Fat %', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.leanBodyMass, 'Lean Body Mass', oneWeekAgo, now),
+        
+        // Vitals
+        this.fetchQuantityData(HKQuantityTypeIdentifier.bloodPressureSystolic, 'Blood Pressure (Systolic)', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.bloodPressureDiastolic, 'Blood Pressure (Diastolic)', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.bloodGlucose, 'Blood Glucose', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.oxygenSaturation, 'Oxygen Saturation', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.respiratoryRate, 'Respiratory Rate', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.bodyTemperature, 'Body Temperature', oneWeekAgo, now),
+        
+        // Nutrition (key metrics)
+        this.fetchQuantityData(HKQuantityTypeIdentifier.dietaryEnergyConsumed, 'Calories Consumed', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.dietaryProtein, 'Protein', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.dietaryCarbohydrates, 'Carbohydrates', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.dietaryFatTotal, 'Total Fat', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.dietaryWater, 'Water', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.dietaryCaffeine, 'Caffeine', oneWeekAgo, now),
+        
+        // Mobility
+        this.fetchQuantityData(HKQuantityTypeIdentifier.walkingSpeed, 'Walking Speed', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.walkingStepLength, 'Step Length', oneWeekAgo, now),
+        
+        // Hearing
+        this.fetchQuantityData(HKQuantityTypeIdentifier.environmentalAudioExposure, 'Environmental Audio Exposure', oneWeekAgo, now),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.headphoneAudioExposure, 'Headphone Audio Exposure', oneWeekAgo, now),
+      ];
+
+      // Fetch all category types in parallel
+      const categoryPromises = [
+        this.fetchCategoryData(HKCategoryTypeIdentifier.sleepAnalysis, 'Sleep', oneWeekAgo, now),
+        this.fetchCategoryData(HKCategoryTypeIdentifier.mindfulSession, 'Mindful Minutes', oneWeekAgo, now),
+        this.fetchCategoryData(HKCategoryTypeIdentifier.appleStandHour, 'Stand Hours', oneWeekAgo, now),
+      ];
+
+      // Wait for all data to be fetched
+      const [quantityResults, categoryResults] = await Promise.all([
+        Promise.allSettled(quantityPromises),
+        Promise.allSettled(categoryPromises),
       ]);
 
+      // Process results and organize by category
+      const processResults = (results) => {
+        return results
+          .map(result => result.status === 'fulfilled' ? result.value : null)
+          .filter(item => item && item.count > 0); // Only include items with data
+      };
+
+      const quantityData = processResults(quantityResults);
+      const categoryData = processResults(categoryResults);
+
+      // Organize data by category
+      const organizedData = {
+        activity: quantityData.filter(item => 
+          ['Steps', 'Distance Walking/Running', 'Distance Cycling', 'Distance Swimming', 
+           'Flights Climbed', 'Active Energy', 'Resting Energy', 'Exercise Time', 'Stand Time'].includes(item.label)
+        ),
+        heart: quantityData.filter(item => 
+          ['Heart Rate', 'Resting Heart Rate', 'Walking Heart Rate', 'Heart Rate Variability', 'VO2 Max'].includes(item.label)
+        ),
+        body: quantityData.filter(item => 
+          ['Height', 'Weight', 'BMI', 'Body Fat %', 'Lean Body Mass'].includes(item.label)
+        ),
+        vitals: quantityData.filter(item => 
+          ['Blood Pressure (Systolic)', 'Blood Pressure (Diastolic)', 'Blood Glucose', 
+           'Oxygen Saturation', 'Respiratory Rate', 'Body Temperature'].includes(item.label)
+        ),
+        nutrition: quantityData.filter(item => 
+          ['Calories Consumed', 'Protein', 'Carbohydrates', 'Total Fat', 'Water', 'Caffeine'].includes(item.label)
+        ),
+        mobility: quantityData.filter(item => 
+          ['Walking Speed', 'Step Length'].includes(item.label)
+        ),
+        hearing: quantityData.filter(item => 
+          ['Environmental Audio Exposure', 'Headphone Audio Exposure'].includes(item.label)
+        ),
+        sleep: categoryData.filter(item => 
+          ['Sleep', 'Mindful Minutes', 'Stand Hours'].includes(item.label)
+        ),
+      };
+
+      // Create summary
+      const summary = {
+        totalMetrics: quantityData.length + categoryData.length,
+        totalDataPoints: [...quantityData, ...categoryData].reduce((sum, item) => sum + item.count, 0),
+        categories: Object.keys(organizedData).filter(key => organizedData[key].length > 0),
+      };
+
+      if (DEBUG_HEALTHKIT) {
+        console.log(`[HealthKit] Fetched ${summary.totalMetrics} metrics with ${summary.totalDataPoints} data points`);
+      }
+
       return {
-        steps: steps.status === 'fulfilled' ? steps.value : { error: 'Failed to fetch' },
-        heartRate: heartRate.status === 'fulfilled' ? heartRate.value : { error: 'Failed to fetch' },
-        sleep: sleep.status === 'fulfilled' ? sleep.value : { error: 'Failed to fetch' },
-        workouts: workouts.status === 'fulfilled' ? workouts.value : { error: 'Failed to fetch' },
-        weight: weight.status === 'fulfilled' ? weight.value : { error: 'Failed to fetch' },
-        bloodPressure: bloodPressure.status === 'fulfilled' ? bloodPressure.value : { error: 'Failed to fetch' },
-        permissions: {
-          read: permissions.permissions.read,
-          write: permissions.permissions.write,
-        },
+        ...organizedData,
+        summary,
         lastUpdated: now.toISOString(),
       };
     } catch (error) {
-      console.error('Error fetching health data:', error);
+      console.error('[HealthKit] Error fetching health data:', error);
       throw error;
     }
   }

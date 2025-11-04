@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40, // Safe area padding
     paddingTop: 16,
     alignItems: 'center',
+    zIndex: 100,
   },
   navigationBar: {
     flexDirection: 'row',

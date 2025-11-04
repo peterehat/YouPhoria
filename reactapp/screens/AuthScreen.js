@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import Background from '../components/Background';
@@ -124,7 +125,7 @@ const AuthScreen = () => {
   }, []);
 
   return (
-    <Background style={styles.background} overlayOpacity={0.75}>
+    <Background style={styles.background} overlayOpacity={0.50}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -132,9 +133,15 @@ const AuthScreen = () => {
         <StatusBar style="light" />
         <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
-          <Text style={styles.title}>YouPhoria Wellness</Text>
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../assets/You-i-Logo-wide.png')} 
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
           <Text style={styles.subtitle}>
-            Connect your health data and track your wellness journey
+            Find more joy. Do it intelligently.
           </Text>
         </View>
 
@@ -270,6 +277,16 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 50,
+  },
+  logo: {
+    width: 200,
+    height: 60,
+    marginLeft: -15,
+    tintColor: '#ffffff',
   },
   title: {
     fontSize: 32,
