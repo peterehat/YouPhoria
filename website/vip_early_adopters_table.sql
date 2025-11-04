@@ -22,11 +22,14 @@ CREATE INDEX IF NOT EXISTS idx_vip_early_adopters_submitted_at ON public.vip_ear
 -- Enable Row Level Security (optional - you may want to disable this for public form submissions)
 ALTER TABLE public.vip_early_adopters ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policy if it exists
+DROP POLICY IF EXISTS "Allow public insert on vip_early_adopters" ON public.vip_early_adopters;
+
 -- Policy to allow anyone to insert (for form submissions)
 CREATE POLICY "Allow public insert on vip_early_adopters"
   ON public.vip_early_adopters
   FOR INSERT
-  TO anon
+  TO anon, authenticated
   WITH CHECK (true);
 
 -- Policy to allow authenticated users to read all submissions (optional - adjust based on your needs)

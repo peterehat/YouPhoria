@@ -253,10 +253,11 @@ const contactForm = document.getElementById('contactForm');
 const formSuccess = document.getElementById('formSuccess');
 const formError = document.getElementById('formError');
 
+// Store the handler function so we can remove it if needed
+let formSubmitHandler = null;
+
 if (contactForm) {
-    contactForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
+    formSubmitHandler = async function(e) {
         // Hide any previous messages
         if (formSuccess) formSuccess.style.display = 'none';
         if (formError) formError.style.display = 'none';
@@ -268,79 +269,108 @@ if (contactForm) {
         const phone = formData.get('phone');
         const referral = formData.get('referral');
         
-        try {
-            // Try to submit to Supabase first
-            if (supabaseClient) {
-                try {
-                    const { data, error } = await supabaseClient
-                        .from('vip_early_adopters')
-                        .insert([
-                            {
-                                name: name,
-                                email: email,
-                                phone: phone,
-                                referral_source: referral,
-                                submitted_at: new Date().toISOString()
-                            }
-                        ])
-                        .select();
-                    
-                    if (error) {
-                        console.warn('Supabase error:', error);
-                        // If table doesn't exist (404), fall through to Netlify
-                        if (error.code === 'PGRST116' || error.message.includes('404')) {
-                            throw new Error('Table not found - using Netlify fallback');
+        // Try Supabase first if available
+        if (supabaseClient) {
+            try {
+                // Prevent default to try Supabase first
+                e.preventDefault();
+                
+                const { data, error } = await supabaseClient
+                    .from('vip_early_adopters')
+                    .insert([
+                        {
+                            name: name,
+                            email: email,
+                            phone: phone,
+                            referral_source: referral,
+                            submitted_at: new Date().toISOString()
                         }
-                        throw error;
-                    }
-                    
-                    // Success! Show message and reset form
-                    if (formSuccess) {
-                        formSuccess.style.display = 'block';
-                        formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
-                        formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
-                    contactForm.reset();
-                    return; // Success, exit early
-                } catch (supabaseError) {
-                    console.warn('Supabase submission failed, trying Netlify:', supabaseError);
-                    // Fall through to Netlify fallback
+                    ])
+                    .select();
+                
+                if (error) {
+                    throw error;
                 }
-            }
-            
-            // Fallback to Netlify form submission
-            const formData = new FormData(contactForm);
-            const response = await fetch('/', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (response.ok) {
-                // Success with Netlify
+                
+                // Success with Supabase! Show message and reset form
                 if (formSuccess) {
                     formSuccess.style.display = 'block';
                     formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
                     formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }
                 contactForm.reset();
+                return; // Success, exit early
                 
-                // Redirect to success page
-                window.location.href = '/?form-submitted=true';
-            } else {
-                throw new Error('Form submission failed');
-            }
-            
-        } catch (error) {
-            console.error('Error submitting form:', error);
-            
-            // Show error message
-            if (formError) {
-                formError.style.display = 'block';
-                formError.textContent = 'Oops! Something went wrong. Please try again or contact us directly.';
-                formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (supabaseError) {
+                console.warn('Supabase submission failed, trying Netlify:', supabaseError);
+                
+                // If it's an RLS error (42501) or other Supabase issue, fall back to Netlify
+                if (supabaseError.code === '42501' || supabaseError.code === 'PGRST116' || supabaseError.message.includes('404')) {
+                    // Show loading state
+                    const submitButton = contactForm.querySelector('button[type="submit"]');
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                        submitButton.textContent = 'Submitting...';
+                    }
+                    
+                    // Submit to Netlify Forms via fetch
+                    try {
+                        const netlifyFormData = new FormData(contactForm);
+                        const response = await fetch('/', {
+                            method: 'POST',
+                            body: netlifyFormData,
+                            headers: {
+                                'Accept': 'text/html'
+                            }
+                        });
+                        
+                        if (response.ok || response.redirected) {
+                            // Netlify processed the form
+                            if (formSuccess) {
+                                formSuccess.style.display = 'block';
+                                formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
+                                formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }
+                            contactForm.reset();
+                            if (submitButton) {
+                                submitButton.disabled = false;
+                                submitButton.textContent = 'Join VIP Early Access';
+                            }
+                            return;
+                        } else {
+                            throw new Error('Netlify submission failed');
+                        }
+                    } catch (netlifyError) {
+                        console.error('Netlify submission error:', netlifyError);
+                        // Show error message
+                        if (formError) {
+                            formError.style.display = 'block';
+                            formError.textContent = 'Oops! Something went wrong. Please try again or contact us directly.';
+                            formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.textContent = 'Join VIP Early Access';
+                        }
+                        return;
+                    }
+                }
+                
+                // Other Supabase errors - show error message
+                if (formError) {
+                    formError.style.display = 'block';
+                    formError.textContent = 'Oops! Something went wrong. Please try again or contact us directly.';
+                    formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+                return;
             }
         }
-    });
+        
+        // No Supabase client - let Netlify handle it naturally
+        // Don't preventDefault, just let the form submit
+    };
+    
+    contactForm.addEventListener('submit', formSubmitHandler);
 }
 
 
