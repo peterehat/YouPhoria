@@ -304,56 +304,17 @@ if (contactForm) {
             } catch (supabaseError) {
                 console.warn('Supabase submission failed, trying Netlify:', supabaseError);
                 
-                // If it's an RLS error (42501) or other Supabase issue, fall back to Netlify
+                // If it's an RLS error (42501) or other Supabase issue, show helpful error
                 if (supabaseError.code === '42501' || supabaseError.code === 'PGRST116' || supabaseError.message.includes('404')) {
-                    // Show loading state
-                    const submitButton = contactForm.querySelector('button[type="submit"]');
-                    if (submitButton) {
-                        submitButton.disabled = true;
-                        submitButton.textContent = 'Submitting...';
-                    }
+                    console.error('Supabase configuration issue:', supabaseError);
                     
-                    // Submit to Netlify Forms via fetch
-                    try {
-                        const netlifyFormData = new FormData(contactForm);
-                        // Ensure form-name is set for Netlify
-                        netlifyFormData.set('form-name', 'vip-signup');
-                        
-                        const response = await fetch('/', {
-                            method: 'POST',
-                            body: netlifyFormData
-                        });
-                        
-                        if (response.ok || response.redirected) {
-                            // Netlify processed the form
-                            if (formSuccess) {
-                                formSuccess.style.display = 'block';
-                                formSuccess.textContent = 'Thank you! You\'ve been added to our VIP early access list. We\'ll be in touch soon!';
-                                formSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                            }
-                            contactForm.reset();
-                            if (submitButton) {
-                                submitButton.disabled = false;
-                                submitButton.textContent = 'Join VIP Early Access';
-                            }
-                            return;
-                        } else {
-                            throw new Error('Netlify submission failed');
-                        }
-                    } catch (netlifyError) {
-                        console.error('Netlify submission error:', netlifyError);
-                        // Show error message
-                        if (formError) {
-                            formError.style.display = 'block';
-                            formError.textContent = 'Oops! Something went wrong. Please try again or contact us directly.';
-                            formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        }
-                        if (submitButton) {
-                            submitButton.disabled = false;
-                            submitButton.textContent = 'Join VIP Early Access';
-                        }
-                        return;
+                    // Show helpful error message with contact info
+                    if (formError) {
+                        formError.style.display = 'block';
+                        formError.innerHTML = 'We\'re experiencing technical difficulties with our signup form. Please email us directly at <a href="mailto:support@you-i.app" style="color: var(--primary-color); text-decoration: underline;">support@you-i.app</a> to join our VIP early access list. We apologize for the inconvenience!';
+                        formError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     }
+                    return;
                 }
                 
                 // Other Supabase errors - show error message

@@ -27,10 +27,11 @@ DROP POLICY IF EXISTS "Allow public insert on vip_early_adopters" ON public.vip_
 DROP POLICY IF EXISTS "Allow authenticated users to read vip_early_adopters" ON public.vip_early_adopters;
 
 -- Policy to allow anyone to insert (for form submissions)
+-- Using public role to allow all users including anonymous
 CREATE POLICY "Allow public insert on vip_early_adopters"
   ON public.vip_early_adopters
   FOR INSERT
-  TO anon, authenticated
+  TO public
   WITH CHECK (true);
 
 -- Policy to allow authenticated users to read all submissions (optional - adjust based on your needs)
