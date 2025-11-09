@@ -292,7 +292,7 @@ export default function HomeScreen({ onNavigate }) {
                                 onPress={handleViewInsights}
                                 activeOpacity={0.8}
                               >
-                                <Text style={styles.insightsButtonText}>View You-I Insights</Text>
+                                <Text style={styles.insightsButtonText}>View You-i Insights</Text>
                               </TouchableOpacity>
                               
                               <TouchableOpacity 

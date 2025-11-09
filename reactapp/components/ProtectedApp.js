@@ -8,9 +8,11 @@ import DataScreen from '../components/DataScreen';
 import DevicesScreen from '../components/DevicesScreen';
 import BottomNavigation from '../components/BottomNavigation';
 import { useState } from 'react';
+import useAuthStore from '../store/authStore';
 
 const ProtectedApp = () => {
   const [currentScreen, setCurrentScreen] = useState('Home');
+  const { startOnboarding } = useAuthStore();
 
   const handleNavigation = (screen) => {
     setCurrentScreen(screen);
@@ -21,7 +23,7 @@ const ProtectedApp = () => {
       case 'Home':
         return <HomeScreen onNavigate={handleNavigation} />;
       case 'Insights':
-        return <InsightsScreen />;
+        return <InsightsScreen onOpenOnboarding={startOnboarding} />;
       case 'Data':
         return <DataScreen />;
       case 'Devices':

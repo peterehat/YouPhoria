@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
   avatar_url TEXT,
+  onboarding_completed BOOLEAN DEFAULT false,
+  onboarding_completed_at TIMESTAMP WITH TIME ZONE,
+  onboarding_data JSONB,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

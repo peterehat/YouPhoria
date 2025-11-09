@@ -4,10 +4,22 @@ import {
   isHealthDataAvailable,
   queryQuantitySamples,
   queryCategorySamples,
+  getRequestStatusForAuthorization,
 } from '@kingstinct/react-native-healthkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../lib/supabase';
 
 // Toggle verbose HealthKit logging here
 const DEBUG_HEALTHKIT = __DEV__ && false;
+
+// AsyncStorage keys
+const STORAGE_KEYS = {
+  CONNECTION_STATE: '@youphoria:apple_health_connected',
+  LAST_SYNC: '@youphoria:apple_health_last_sync',
+  RAW_DATA_PREFIX: '@youphoria:health_data:',
+};
+
+const USER_ID_SANITIZE_REGEX = /[^a-zA-Z0-9_-]/g;
 
 // HealthKit Type Identifiers (string literals as per Kingstinct API)
 // Comprehensive set for maximum data access
@@ -161,6 +173,139 @@ const HKCharacteristicTypeIdentifier = {
 class HealthKitService {
   constructor() {
     this.isInitialized = false;
+    this.currentUserId = null;
+  }
+
+  setCurrentUser(userId) {
+    const normalizedId = typeof userId === 'string' && userId.length > 0 ? userId : null;
+    this.currentUserId = normalizedId;
+
+    if (this.currentUserId) {
+      this.migrateLegacyKeys(this.currentUserId).catch((error) => {
+        console.error('[HealthKit] Error migrating legacy keys:', error);
+      });
+    }
+  }
+
+  getSanitizedUserId(userId = this.currentUserId) {
+    if (!userId) {
+      return null;
+    }
+    return userId.replace(USER_ID_SANITIZE_REGEX, '_');
+  }
+
+  getUserScopedKey(baseKey) {
+    const sanitizedId = this.getSanitizedUserId();
+    if (!sanitizedId) {
+      return baseKey;
+    }
+
+    if (baseKey.endsWith(':')) {
+      return `${baseKey}${sanitizedId}:`;
+    }
+
+    return `${baseKey}:${sanitizedId}`;
+  }
+
+  getRawDataKey(dataType) {
+    const prefix = this.getUserScopedKey(STORAGE_KEYS.RAW_DATA_PREFIX);
+    return `${prefix}${dataType}`;
+  }
+
+  async migrateLegacyKeys(userId) {
+    try {
+      const sanitizedId = this.getSanitizedUserId(userId);
+      if (!sanitizedId) {
+        return;
+      }
+
+      // Migrate connection state
+      const legacyConnection = await AsyncStorage.getItem(STORAGE_KEYS.CONNECTION_STATE);
+      if (legacyConnection) {
+        const namespacedKey = `${STORAGE_KEYS.CONNECTION_STATE}:${sanitizedId}`;
+        const existingScoped = await AsyncStorage.getItem(namespacedKey);
+        if (!existingScoped) {
+          await AsyncStorage.setItem(namespacedKey, legacyConnection);
+        }
+        await AsyncStorage.removeItem(STORAGE_KEYS.CONNECTION_STATE);
+      }
+
+      // Migrate last sync time
+      const legacyLastSync = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+      if (legacyLastSync) {
+        const namespacedKey = `${STORAGE_KEYS.LAST_SYNC}:${sanitizedId}`;
+        const existingScoped = await AsyncStorage.getItem(namespacedKey);
+        if (!existingScoped) {
+          await AsyncStorage.setItem(namespacedKey, legacyLastSync);
+        }
+        await AsyncStorage.removeItem(STORAGE_KEYS.LAST_SYNC);
+      }
+
+      // Migrate raw data keys
+      const allKeys = await AsyncStorage.getAllKeys();
+      const legacyPrefix = STORAGE_KEYS.RAW_DATA_PREFIX;
+      const targetPrefix = `${legacyPrefix}${sanitizedId}:`;
+
+      const legacyKeys = allKeys.filter((key) => key.startsWith(legacyPrefix) && !key.startsWith(targetPrefix));
+      if (legacyKeys.length === 0) {
+        return;
+      }
+
+      const operations = legacyKeys.map(async (legacyKey) => {
+        const data = await AsyncStorage.getItem(legacyKey);
+        if (data) {
+          const suffix = legacyKey.substring(legacyPrefix.length);
+          const scopedKey = `${targetPrefix}${suffix}`;
+          const existingScoped = await AsyncStorage.getItem(scopedKey);
+          if (!existingScoped) {
+            await AsyncStorage.setItem(scopedKey, data);
+          }
+        }
+        await AsyncStorage.removeItem(legacyKey);
+      });
+
+      await Promise.all(operations);
+    } catch (error) {
+      console.error('[HealthKit] Failed to migrate legacy keys:', error);
+    }
+  }
+
+  async clearAllLocalData({ includeLegacy = true } = {}) {
+    try {
+      const keysToRemove = new Set();
+
+      const scopedConnectionKey = this.getUserScopedKey(STORAGE_KEYS.CONNECTION_STATE);
+      const scopedLastSyncKey = this.getUserScopedKey(STORAGE_KEYS.LAST_SYNC);
+
+      keysToRemove.add(scopedConnectionKey);
+      keysToRemove.add(scopedLastSyncKey);
+
+      const allKeys = await AsyncStorage.getAllKeys();
+      const scopedRawPrefix = this.getUserScopedKey(STORAGE_KEYS.RAW_DATA_PREFIX);
+      allKeys.forEach((key) => {
+        if (key.startsWith(scopedRawPrefix)) {
+          keysToRemove.add(key);
+        }
+      });
+
+      if (includeLegacy) {
+        keysToRemove.add(STORAGE_KEYS.CONNECTION_STATE);
+        keysToRemove.add(STORAGE_KEYS.LAST_SYNC);
+
+        allKeys.forEach((key) => {
+          if (key.startsWith(STORAGE_KEYS.RAW_DATA_PREFIX)) {
+            keysToRemove.add(key);
+          }
+        });
+      }
+
+      const keysArray = Array.from(keysToRemove).filter(Boolean);
+      if (keysArray.length > 0) {
+        await AsyncStorage.multiRemove(keysArray);
+      }
+    } catch (error) {
+      console.error('[HealthKit] Error clearing local data:', error);
+    }
   }
 
   // Initialize HealthKit and request permissions
@@ -597,9 +742,463 @@ class HealthKitService {
   }
 
   // Disconnect/revoke access (not directly possible with HealthKit, but we can clear our local state)
-  disconnect() {
+  // Note: This only resets in-memory state. User's connection state persists in AsyncStorage
+  // for when they log back in. Use clearUserData() to explicitly delete a user's data.
+  async disconnect() {
     this.isInitialized = false;
+    // Don't clear stored data - just reset in-memory state
+    // User's connection state persists in AsyncStorage for when they log back in
     return true;
+  }
+
+  // Explicitly clear a user's health data from AsyncStorage
+  // This is separate from disconnect() and should be used for "Delete Account" or similar features
+  async clearUserData(userId = null) {
+    try {
+      const targetUserId = userId || this.currentUserId;
+      if (!targetUserId) {
+        console.warn('[HealthKit] clearUserData called without a user ID');
+        return;
+      }
+      
+      // Temporarily set the user context to clear their data
+      const previousUserId = this.currentUserId;
+      this.setCurrentUser(targetUserId);
+      await this.clearAllLocalData({ includeLegacy: false });
+      this.setCurrentUser(previousUserId);
+      
+      console.log('[HealthKit] Cleared all data for user:', targetUserId);
+    } catch (error) {
+      console.error('[HealthKit] Error clearing user data:', error);
+    }
+  }
+
+  // ===== NEW METHODS FOR PERSISTENT CONNECTION =====
+
+  // Check if user has already authorized HealthKit access
+  async getAuthorizationStatus() {
+    try {
+      if (Platform.OS !== 'ios') {
+        return false;
+      }
+
+      // Check a few key permissions to determine if user has granted access
+      const keyPermissions = [
+        HKQuantityTypeIdentifier.stepCount,
+        HKQuantityTypeIdentifier.heartRate,
+        HKQuantityTypeIdentifier.activeEnergyBurned,
+      ];
+
+      // Note: HealthKit doesn't provide a direct way to check authorization status
+      // We'll try to query a small amount of data and see if it succeeds
+      try {
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        
+        // Try to query steps - if this succeeds, we have authorization
+        await queryQuantitySamples(HKQuantityTypeIdentifier.stepCount, {
+          from: oneDayAgo,
+          to: now,
+          limit: 1,
+        });
+        
+        if (DEBUG_HEALTHKIT) {
+          console.log('[HealthKit] Authorization status: authorized');
+        }
+        
+        return true;
+      } catch (error) {
+        if (DEBUG_HEALTHKIT) {
+          console.log('[HealthKit] Authorization status: not authorized or error:', error.message);
+        }
+        return false;
+      }
+    } catch (error) {
+      console.error('[HealthKit] Error checking authorization status:', error);
+      return false;
+    }
+  }
+
+  // Save connection state to AsyncStorage
+  async saveConnectionState(isConnected) {
+    try {
+      const key = this.getUserScopedKey(STORAGE_KEYS.CONNECTION_STATE);
+      await AsyncStorage.setItem(
+        key,
+        JSON.stringify({
+          connected: isConnected,
+          timestamp: new Date().toISOString(),
+        })
+      );
+      
+      if (DEBUG_HEALTHKIT) {
+        console.log('[HealthKit] Connection state saved:', isConnected);
+      }
+    } catch (error) {
+      console.error('[HealthKit] Error saving connection state:', error);
+    }
+  }
+
+  // Load connection state from AsyncStorage
+  async loadConnectionState() {
+    try {
+      const key = this.getUserScopedKey(STORAGE_KEYS.CONNECTION_STATE);
+      const data = await AsyncStorage.getItem(key);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (DEBUG_HEALTHKIT) {
+          console.log('[HealthKit] Connection state loaded:', parsed);
+        }
+        return parsed.connected;
+      }
+      return false;
+    } catch (error) {
+      console.error('[HealthKit] Error loading connection state:', error);
+      return false;
+    }
+  }
+
+  // Save last sync timestamp
+  async saveLastSyncTime() {
+    try {
+      const key = this.getUserScopedKey(STORAGE_KEYS.LAST_SYNC);
+      await AsyncStorage.setItem(
+        key,
+        new Date().toISOString()
+      );
+    } catch (error) {
+      console.error('[HealthKit] Error saving last sync time:', error);
+    }
+  }
+
+  // Get last sync timestamp
+  async getLastSyncTime() {
+    try {
+      const key = this.getUserScopedKey(STORAGE_KEYS.LAST_SYNC);
+      const timestamp = await AsyncStorage.getItem(key);
+      return timestamp ? new Date(timestamp) : null;
+    } catch (error) {
+      console.error('[HealthKit] Error getting last sync time:', error);
+      return null;
+    }
+  }
+
+  // Save raw health data to AsyncStorage
+  async saveRawHealthData(dataType, data) {
+    try {
+      const key = this.getRawDataKey(dataType);
+      await AsyncStorage.setItem(key, JSON.stringify({
+        data,
+        timestamp: new Date().toISOString(),
+      }));
+      
+      if (DEBUG_HEALTHKIT) {
+        console.log(`[HealthKit] Saved ${data.length} samples for ${dataType}`);
+      }
+    } catch (error) {
+      console.error(`[HealthKit] Error saving raw data for ${dataType}:`, error);
+    }
+  }
+
+  // Load raw health data from AsyncStorage
+  async loadRawHealthData(dataType) {
+    try {
+      const key = this.getRawDataKey(dataType);
+      const stored = await AsyncStorage.getItem(key);
+      
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (DEBUG_HEALTHKIT) {
+          console.log(`[HealthKit] Loaded ${parsed.data?.length || 0} samples for ${dataType}`);
+        }
+        return parsed.data;
+      }
+      return null;
+    } catch (error) {
+      console.error(`[HealthKit] Error loading raw data for ${dataType}:`, error);
+      return null;
+    }
+  }
+
+  // Clear old local data (older than specified days)
+  async clearOldLocalData(daysToKeep = 30) {
+    try {
+      const keys = await AsyncStorage.getAllKeys();
+      const scopedPrefix = this.getUserScopedKey(STORAGE_KEYS.RAW_DATA_PREFIX);
+      const prefixes = new Set([scopedPrefix]);
+      prefixes.add(STORAGE_KEYS.RAW_DATA_PREFIX);
+
+      const healthDataKeys = keys.filter((key) => {
+        for (const prefix of prefixes) {
+          if (key.startsWith(prefix)) {
+            return true;
+          }
+        }
+        return false;
+      });
+      
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+      
+      for (const key of healthDataKeys) {
+        const stored = await AsyncStorage.getItem(key);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const dataDate = new Date(parsed.timestamp);
+          
+          if (dataDate < cutoffDate) {
+            await AsyncStorage.removeItem(key);
+            if (DEBUG_HEALTHKIT) {
+              console.log(`[HealthKit] Removed old data: ${key}`);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[HealthKit] Error clearing old local data:', error);
+    }
+  }
+
+  // Aggregate daily metrics from raw HealthKit data
+  async aggregateDailyMetrics(date) {
+    try {
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      if (DEBUG_HEALTHKIT) {
+        console.log(`[HealthKit] Aggregating metrics for ${date.toDateString()}`);
+      }
+
+      // Fetch all metrics for the day
+      const [
+        steps,
+        distance,
+        activeCalories,
+        restingCalories,
+        exerciseTime,
+        flightsClimbed,
+        heartRate,
+        restingHeartRate,
+        hrv,
+        sleep,
+        weight,
+      ] = await Promise.allSettled([
+        this.fetchQuantityData(HKQuantityTypeIdentifier.stepCount, 'Steps', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.distanceWalkingRunning, 'Distance', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.activeEnergyBurned, 'Active Calories', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.basalEnergyBurned, 'Resting Calories', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.appleExerciseTime, 'Exercise Time', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.flightsClimbed, 'Flights Climbed', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.heartRate, 'Heart Rate', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.restingHeartRate, 'Resting Heart Rate', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.heartRateVariabilitySDNN, 'HRV', startOfDay, endOfDay),
+        this.fetchCategoryData(HKCategoryTypeIdentifier.sleepAnalysis, 'Sleep', startOfDay, endOfDay),
+        this.fetchQuantityData(HKQuantityTypeIdentifier.bodyMass, 'Weight', startOfDay, endOfDay),
+      ]);
+
+      // Helper to sum quantities
+      const sumQuantities = (result) => {
+        if (result.status === 'fulfilled' && result.value.data && result.value.data.length > 0) {
+          return result.value.data.reduce((sum, sample) => sum + (sample.quantity || 0), 0);
+        }
+        return null;
+      };
+
+      // Helper to average quantities
+      const avgQuantities = (result) => {
+        if (result.status === 'fulfilled' && result.value.data && result.value.data.length > 0) {
+          const sum = result.value.data.reduce((sum, sample) => sum + (sample.quantity || 0), 0);
+          return Math.round(sum / result.value.data.length);
+        }
+        return null;
+      };
+
+      // Helper to get latest value
+      const getLatest = (result) => {
+        if (result.status === 'fulfilled' && result.value.data && result.value.data.length > 0) {
+          return result.value.data[0].quantity;
+        }
+        return null;
+      };
+
+      // Calculate sleep hours from sleep analysis
+      const calculateSleepHours = (result) => {
+        if (result.status === 'fulfilled' && result.value.data && result.value.data.length > 0) {
+          // Sleep samples have startDate and endDate
+          const totalSeconds = result.value.data.reduce((sum, sample) => {
+            const start = new Date(sample.startDate);
+            const end = new Date(sample.endDate);
+            return sum + ((end - start) / 1000);
+          }, 0);
+          return totalSeconds / 3600; // Convert to hours
+        }
+        return null;
+      };
+
+      const metrics = {
+        date: date.toISOString().split('T')[0], // YYYY-MM-DD format
+        steps: Math.round(sumQuantities(steps) || 0),
+        distance_km: (sumQuantities(distance) / 1000) || null, // Convert meters to km
+        active_calories: Math.round(sumQuantities(activeCalories) || 0),
+        resting_calories: Math.round(sumQuantities(restingCalories) || 0),
+        exercise_minutes: Math.round((sumQuantities(exerciseTime) || 0) / 60), // Convert seconds to minutes
+        flights_climbed: Math.round(sumQuantities(flightsClimbed) || 0),
+        avg_heart_rate: avgQuantities(heartRate),
+        resting_heart_rate: getLatest(restingHeartRate),
+        heart_rate_variability: getLatest(hrv),
+        sleep_hours: calculateSleepHours(sleep),
+        weight_kg: getLatest(weight),
+      };
+
+      if (DEBUG_HEALTHKIT) {
+        console.log('[HealthKit] Aggregated metrics:', metrics);
+      }
+
+      return metrics;
+    } catch (error) {
+      console.error('[HealthKit] Error aggregating daily metrics:', error);
+      throw error;
+    }
+  }
+
+  // Sync daily metrics to Supabase
+  async syncDailyMetricsToCloud(dailyMetrics) {
+    try {
+      if (!dailyMetrics || !dailyMetrics.date) {
+        throw new Error('Invalid daily metrics data');
+      }
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Upsert the daily metrics (insert or update if exists)
+      const { data, error } = await supabase
+        .from('health_metrics_daily')
+        .upsert({
+          user_id: user.id,
+          ...dailyMetrics,
+        }, {
+          onConflict: 'user_id,date',
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (DEBUG_HEALTHKIT) {
+        console.log('[HealthKit] Synced metrics to cloud:', data);
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('[HealthKit] Error syncing metrics to cloud:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Fetch cloud metrics from Supabase
+  async fetchCloudMetrics(startDate, endDate) {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase
+        .from('health_metrics_daily')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', startDate.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0])
+        .order('date', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      if (DEBUG_HEALTHKIT) {
+        console.log(`[HealthKit] Fetched ${data?.length || 0} days of cloud metrics`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('[HealthKit] Error fetching cloud metrics:', error);
+      return [];
+    }
+  }
+
+  // Sync last N days of health data
+  async syncHealthData(days = 7) {
+    try {
+      if (!this.isInitialized) {
+        // Try to initialize if we have cached connection
+        const isConnected = await this.loadConnectionState();
+        const isAuthorized = await this.getAuthorizationStatus();
+        
+        if (!isConnected || !isAuthorized) {
+          throw new Error('HealthKit not connected or authorized');
+        }
+        
+        this.isInitialized = true;
+      }
+
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      if (DEBUG_HEALTHKIT) {
+        console.log(`[HealthKit] Syncing ${days} days of health data...`);
+      }
+
+      // Aggregate and sync each day
+      const syncPromises = [];
+      for (let i = 0; i < days; i++) {
+        const date = new Date(endDate);
+        date.setDate(date.getDate() - i);
+        
+        syncPromises.push(
+          this.aggregateDailyMetrics(date)
+            .then(metrics => this.syncDailyMetricsToCloud(metrics))
+        );
+      }
+
+      const results = await Promise.allSettled(syncPromises);
+      
+      const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+      const failed = results.length - successful;
+
+      if (DEBUG_HEALTHKIT) {
+        console.log(`[HealthKit] Sync complete: ${successful} successful, ${failed} failed`);
+      }
+
+      // Save last sync time
+      await this.saveLastSyncTime();
+
+      // Clean up old local data
+      await this.clearOldLocalData(30);
+
+      return {
+        success: true,
+        synced: successful,
+        failed: failed,
+      };
+    } catch (error) {
+      console.error('[HealthKit] Error syncing health data:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
   }
 }
 

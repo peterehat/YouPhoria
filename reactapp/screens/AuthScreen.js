@@ -223,7 +223,9 @@ const AuthScreen = () => {
             onPress={handleGoogleSignIn}
             disabled={loading}
           >
-            <Text style={styles.googleButtonText}>Continue with Google</Text>
+            <Text style={styles.googleButtonText}>
+              {isSignUp ? 'Continue with Google' : 'Login with Google'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -231,7 +233,9 @@ const AuthScreen = () => {
             onPress={handleAppleSignIn}
             disabled={loading}
           >
-            <Text style={styles.appleButtonText}>Continue with Apple</Text>
+            <Text style={styles.appleButtonText}>
+              {isSignUp ? 'Continue with Apple' : 'Login with Apple'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity

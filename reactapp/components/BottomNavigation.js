@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 const BottomNavigation = ({ currentScreen, onNavigate }) => {
@@ -45,10 +45,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    paddingBottom: 40, // Safe area padding
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16, // Safe area padding for iOS home indicator
     paddingTop: 16,
     alignItems: 'center',
     zIndex: 100,
+    backgroundColor: 'transparent', // Ensure no content shows through
   },
   navigationBar: {
     flexDirection: 'row',

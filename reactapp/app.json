@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "YouPhoria Wellness",
+    "name": "You-i",
     "slug": "youphoria",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,24 +13,25 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.youphoria.app",
+      "bundleIdentifier": "com.youi.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSHealthShareUsageDescription": "YouPhoria needs access to your health data to provide personalized wellness insights and recommendations.",
-        "NSHealthUpdateUsageDescription": "YouPhoria needs permission to write health data to help you track your wellness journey."
+        "NSHealthShareUsageDescription": "You-i needs access to your health data to provide personalized wellness insights and recommendations.",
+        "NSHealthUpdateUsageDescription": "You-i needs permission to write health data to help you track your wellness journey."
       },
       "entitlements": {
         "com.apple.developer.healthkit": true,
         "com.apple.developer.healthkit.access": []
       },
-      "buildNumber": "7"
+      "buildNumber": "7",
+      "appleTeamId": "RX9FNDKHNY"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.youphoria.app"
+      "package": "com.youi.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -45,7 +46,7 @@
       "supabaseUrl": "https://empmaiqjpyhanrpuabou.supabase.co",
       "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtcG1haXFqcHloYW5ycHVhYm91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3MTU1MjAsImV4cCI6MjA3NzI5MTUyMH0.rRZsoyrEfvkNiBkOjBUQPjw38_bhIOBJarrjwusWXmM"
     },
-    "scheme": "youphoria",
+    "scheme": "youi",
     "owner": "peterehat"
   }
 }

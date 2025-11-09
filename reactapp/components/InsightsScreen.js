@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import Background from './Background';
 
-export default function InsightsScreen() {
+export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
   // Background handled by shared Background component
 
   return (
@@ -25,7 +25,7 @@ export default function InsightsScreen() {
       <Background style={styles.backgroundImage}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>You-I Insights</Text>
+          <Text style={styles.headerTitle}>You-i Insights</Text>
         </View>
 
         {/* Content */}
@@ -46,6 +46,19 @@ export default function InsightsScreen() {
                 </Text>
               </View>
             </BlurView>
+          </View>
+
+          <View style={styles.buttonSection}>
+            <TouchableOpacity
+              style={styles.revisitButton}
+              activeOpacity={0.85}
+              onPress={onOpenOnboarding}
+            >
+              <Text style={styles.revisitButtonText}>Update My You-i Profile</Text>
+            </TouchableOpacity>
+            <Text style={styles.revisitHelper}>
+              Reopen the onboarding survey anytime to refresh your You-i Wellness Profile.
+            </Text>
           </View>
         </ScrollView>
       </Background>
@@ -181,5 +194,34 @@ const styles = StyleSheet.create({
     color: '#e5e7eb',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  buttonSection: {
+    marginTop: 32,
+    alignItems: 'center',
+    gap: 12,
+  },
+  revisitButton: {
+    backgroundColor: '#eaff61',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: '#eaff61',
+  },
+  revisitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
+  },
+  revisitHelper: {
+    fontSize: 14,
+    color: '#e5e7eb',
+    textAlign: 'center',
+    lineHeight: 20,
+    paddingHorizontal: 16,
   },
 });

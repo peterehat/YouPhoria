@@ -314,6 +314,100 @@ const useAppStore = create((set, get) => ({
       error: null,
     });
   },
+
+  // ===== HEALTH METRICS METHODS =====
+
+  // Sync health metrics to Supabase
+  syncHealthMetrics: async (metricsArray) => {
+    const { user } = get();
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    try {
+      const { data, error } = await supabase
+        .from('health_metrics_daily')
+        .upsert(metricsArray.map(metric => ({
+          user_id: user.id,
+          ...metric,
+        })), {
+          onConflict: 'user_id,date',
+        })
+        .select();
+
+      if (error) throw error;
+
+      return { success: true, data };
+    } catch (error) {
+      set({ error: error.message });
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Fetch health metrics from Supabase
+  fetchHealthMetrics: async (startDate, endDate) => {
+    const { user } = get();
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    set((state) => ({ loading: { ...state.loading, healthData: true } }));
+    try {
+      let query = supabase
+        .from('health_metrics_daily')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (startDate) {
+        query = query.gte('date', startDate.toISOString().split('T')[0]);
+      }
+      if (endDate) {
+        query = query.lte('date', endDate.toISOString().split('T')[0]);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      return { success: true, data: data || [] };
+    } catch (error) {
+      set({ error: error.message });
+      return { success: false, error: error.message };
+    } finally {
+      set((state) => ({ loading: { ...state.loading, healthData: false } }));
+    }
+  },
+
+  // Get Apple Health connection status
+  getAppleHealthConnection: () => {
+    const { connectedApps } = get();
+    return connectedApps.find(app => app.app_name === 'Apple Health');
+  },
+
+  // Update last sync timestamp for an app
+  updateLastSync: async (appId) => {
+    try {
+      const { data, error } = await supabase
+        .from('connected_apps')
+        .update({
+          last_sync: new Date().toISOString(),
+          sync_status: 'completed',
+        })
+        .eq('id', appId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      set((state) => ({
+        connectedApps: state.connectedApps.map(app =>
+          app.id === appId ? data : app
+        )
+      }));
+
+      return { success: true, data };
+    } catch (error) {
+      set({ error: error.message });
+      return { success: false, error: error.message };
+    }
+  },
 }));
 
 export default useAppStore;

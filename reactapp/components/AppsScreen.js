@@ -19,6 +19,8 @@ import { Ionicons } from '@expo/vector-icons';
 import Background from './Background';
 import Constants from 'expo-constants';
 import HealthKitService from '../services/healthKitService';
+import useAppStore from '../store/appStore';
+import useAuthStore from '../store/authStore';
 
 // Toggle verbose HealthKit logging here (independent flag for this screen)
 const DEBUG_HEALTHKIT = __DEV__ && false;
@@ -29,6 +31,14 @@ if (DEBUG_HEALTHKIT) {
 }
 
 export default function AppsScreen() {
+  // Get user from auth store
+  const user = useAuthStore((state) => state.user);
+  
+  // Get app store methods
+  const addConnectedApp = useAppStore((state) => state.addConnectedApp);
+  const removeConnectedApp = useAppStore((state) => state.removeConnectedApp);
+  const connectedApps = useAppStore((state) => state.connectedApps);
+  
   // Simple state management without Zustand
   const [connections, setConnections] = useState({
     appleHealth: false,
@@ -39,15 +49,71 @@ export default function AppsScreen() {
   });
   
   const [healthKitAuthorized, setHealthKitAuthorized] = useState(false);
-
   const [isLoading, setIsLoading] = useState(false);
   const [showDataModal, setShowDataModal] = useState(false);
   const [healthData, setHealthData] = useState(null);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   // Check if running in Expo Go (which doesn't support HealthKit)
   const isExpoGo = Constants.appOwnership === 'expo';
   // Background handled by shared Background component
 
+
+  // Check authorization status on mount
+  useEffect(() => {
+    const checkAppleHealthConnection = async () => {
+      if (Platform.OS !== 'ios' || isExpoGo) {
+        setIsCheckingAuth(false);
+        return;
+      }
+
+      try {
+        // Check cached connection state (user-scoped)
+        const cachedState = await HealthKitService.loadConnectionState();
+        
+        // Verify with actual HealthKit authorization (device-wide)
+        const isAuthorized = await HealthKitService.getAuthorizationStatus();
+        
+        if (DEBUG_HEALTHKIT) {
+          console.log('AppsScreen - Cached state:', cachedState);
+          console.log('AppsScreen - Authorized:', isAuthorized);
+        }
+
+        // Only restore connection if BOTH cached state AND device authorization are true
+        // This prevents showing "connected" for a new user just because a previous user granted permissions
+        if (cachedState && isAuthorized) {
+          // Restore connection state
+          setConnections(prev => ({ ...prev, appleHealth: true }));
+          setHealthKitAuthorized(true);
+          
+          // Get last sync time
+          const lastSync = await HealthKitService.getLastSyncTime();
+          setLastSyncTime(lastSync);
+          
+          if (DEBUG_HEALTHKIT) {
+            console.log('AppsScreen - Apple Health connection restored');
+          }
+        } else if (cachedState && !isAuthorized) {
+          // Cached state says connected but HealthKit says not authorized
+          // User may have revoked permissions in Settings
+          await HealthKitService.saveConnectionState(false);
+          setConnections(prev => ({ ...prev, appleHealth: false }));
+          setHealthKitAuthorized(false);
+        } else {
+          // Either no cached state or not authorized - ensure disconnected
+          setConnections(prev => ({ ...prev, appleHealth: false }));
+          setHealthKitAuthorized(false);
+        }
+      } catch (error) {
+        console.error('AppsScreen - Error checking Apple Health connection:', error);
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAppleHealthConnection();
+  }, [isExpoGo]);
 
   // Helper functions to replace Zustand store methods
   const connectApp = (appId) => {
@@ -133,7 +199,24 @@ export default function AppsScreen() {
       // Disconnect
       disconnectApp('appleHealth');
       setHealthKitAuthorized(false);
-      HealthKitService.disconnect();
+      await HealthKitService.disconnect();
+      
+      // Save disconnected state to AsyncStorage so it persists across sign-outs
+      await HealthKitService.saveConnectionState(false);
+      
+      // Remove from Supabase if user is authenticated
+      if (user) {
+        const appleHealthApp = connectedApps.find(app => app.app_name === 'Apple Health');
+        if (appleHealthApp) {
+          await removeConnectedApp(appleHealthApp.id);
+        }
+      }
+      
+      Alert.alert(
+        'Disconnected',
+        'Apple Health has been disconnected. You can reconnect anytime.',
+        [{ text: 'OK' }]
+      );
     } else {
       // Check if running in Expo Go
       if (isExpoGo) {
@@ -144,9 +227,6 @@ export default function AppsScreen() {
         );
         return;
       }
-
-      // The Kingstinct HealthKit package uses NitroModules, so we don't need to check NativeModules
-      // The module availability is checked when we try to call it
 
       // Connect
       setIsLoading(true);
@@ -162,11 +242,42 @@ export default function AppsScreen() {
         if (authorized) {
           connectApp('appleHealth');
           setHealthKitAuthorized(true);
-          Alert.alert(
-            'Connected Successfully',
-            'Apple Health has been connected successfully. You can now access your health data.',
-            [{ text: 'OK' }]
-          );
+          
+          // Save connection state to AsyncStorage
+          await HealthKitService.saveConnectionState(true);
+          
+          // Add to Supabase if user is authenticated
+          if (user) {
+            const result = await addConnectedApp({
+              appName: 'Apple Health',
+              appType: 'health_tracking',
+            });
+            
+            if (DEBUG_HEALTHKIT) {
+              console.log('Added to Supabase:', result);
+            }
+          }
+          
+          // Trigger initial sync
+          setIsLoading(true);
+          const syncResult = await HealthKitService.syncHealthData(7);
+          
+          if (syncResult.success) {
+            const lastSync = await HealthKitService.getLastSyncTime();
+            setLastSyncTime(lastSync);
+            
+            Alert.alert(
+              'Connected Successfully',
+              `Apple Health has been connected successfully. Synced ${syncResult.synced} days of health data.`,
+              [{ text: 'OK' }]
+            );
+          } else {
+            Alert.alert(
+              'Connected with Warning',
+              'Apple Health connected but initial sync failed. Your data will sync next time you open the app.',
+              [{ text: 'OK' }]
+            );
+          }
         }
       } catch (error) {
         console.error('HealthKit connection error:', error);
@@ -222,6 +333,26 @@ export default function AppsScreen() {
     }
   };
 
+  // Format last sync time for display
+  const formatLastSync = (date) => {
+    if (!date) return 'Never';
+    
+    const now = new Date();
+    const syncDate = new Date(date);
+    const diffMs = now - syncDate;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return syncDate.toLocaleDateString();
+  };
+
   const renderAppCard = (app) => (
     <View key={app.id} style={styles.appCard}>
       <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.appCardBlur}>
@@ -242,9 +373,16 @@ export default function AppsScreen() {
                 styles.statusDot,
                 { backgroundColor: app.isConnected ? '#10b981' : '#6b7280' }
               ]} />
-              <Text style={styles.statusText}>
-                {app.isConnected ? 'Connected' : 'Not Connected'}
-              </Text>
+              <View>
+                <Text style={styles.statusText}>
+                  {app.isConnected ? 'Connected' : 'Not Connected'}
+                </Text>
+                {app.id === 'appleHealth' && app.isConnected && lastSyncTime && (
+                  <Text style={styles.lastSyncText}>
+                    Last sync: {formatLastSync(lastSyncTime)}
+                  </Text>
+                )}
+              </View>
             </View>
             
             <View style={styles.buttonContainer}>
@@ -703,6 +841,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#374151',
     fontWeight: '500',
+  },
+  lastSyncText: {
+    fontSize: 11,
+    color: '#6b7280',
+    marginTop: 2,
   },
   connectButton: {
     paddingHorizontal: 20,
