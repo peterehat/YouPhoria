@@ -12,11 +12,14 @@ import {
   ScrollView,
   ActivityIndicator,
   Keyboard,
+  Alert,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import Markdown from 'react-native-markdown-display';
+import * as DocumentPicker from 'expo-document-picker';
 import { sendMessage, getConversation } from '../services/chatService';
+import { uploadFile } from '../services/uploadService';
 import useAuthStore from '../store/authStore';
 
 export default function ChatOverlay({ 
@@ -32,6 +35,7 @@ export default function ChatOverlay({
   const [streamingMessageId, setStreamingMessageId] = useState(null);
   const [streamingText, setStreamingText] = useState('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const scrollViewRef = useRef(null);
   const slideAnim = useRef(new Animated.Value(1000)).current;
   const streamingIntervalRef = useRef(null);
@@ -288,15 +292,131 @@ export default function ChatOverlay({
       // Start streaming the text
       streamText(result.message, aiMessageId);
     } else {
-      // Show error message
+      // Log detailed error information
+      console.error('[ChatOverlay] Message send failed:', {
+        error: result.error,
+        details: result.details,
+      });
+      
+      // Show error message with more details in development
+      const isDevelopment = __DEV__;
+      let errorContent = 'Sorry, I encountered an error. Please try again.';
+      
+      if (isDevelopment && result.details) {
+        errorContent += `\n\nDebug Info:\n• Error: ${result.details.originalError}\n• API URL: ${result.details.apiUrl}`;
+      }
+      
       const errorMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: errorContent,
         created_at: new Date().toISOString(),
       };
       
       setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    try {
+      // Pick a document
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [
+          'application/pdf',
+          'image/jpeg',
+          'image/png',
+          'text/plain',
+          'text/csv',
+          'text/rtf',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/msword',
+        ],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const file = result.assets[0];
+      
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        Alert.alert('File Too Large', 'Please select a file under 10MB.');
+        return;
+      }
+
+      console.log('[ChatOverlay] Selected file:', {
+        name: file.name,
+        size: file.size,
+        mimeType: file.mimeType,
+      });
+
+      // Show uploading message
+      setIsUploading(true);
+      const uploadingMessage = {
+        id: Date.now().toString(),
+        role: 'system',
+        content: `Uploading ${file.name}...`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, uploadingMessage]);
+
+      // Scroll to bottom
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+
+      // Upload file
+      const uploadResult = await uploadFile(
+        file.uri,
+        file.name,
+        file.mimeType,
+        user.id
+      );
+
+      // Remove uploading message
+      setMessages(prev => prev.filter(m => m.id !== uploadingMessage.id));
+      setIsUploading(false);
+
+      if (!uploadResult.success) {
+        Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload file');
+        return;
+      }
+
+      // Add success message from user
+      const userMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: `Uploaded file: ${file.name}`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, userMessage]);
+
+      // Add AI analysis message
+      const aiMessageId = (Date.now() + 1).toString();
+      const aiMessage = {
+        id: aiMessageId,
+        role: 'assistant',
+        content: `I've analyzed your file "${file.name}". ${uploadResult.extractedData.summary}\n\nI found ${uploadResult.extractedData.entries?.length || 0} data entries. You can now ask me questions about this data!`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Stream the AI message
+      streamText(aiMessage.content, aiMessageId);
+
+      // Scroll to bottom
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+
+    } catch (error) {
+      console.error('[ChatOverlay] Error uploading file:', error);
+      setIsUploading(false);
+      Alert.alert('Error', 'Failed to upload file. Please try again.');
     }
   };
 
@@ -428,6 +548,18 @@ export default function ChatOverlay({
             <View style={styles.inputContainer}>
               <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.inputBlur}>
                 <View style={styles.inputWrapper}>
+                  <TouchableOpacity
+                    style={styles.attachButton}
+                    onPress={handleFileUpload}
+                    disabled={isLoading || isUploading}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons
+                      name="attach"
+                      size={24}
+                      color={isLoading || isUploading ? '#9ca3af' : '#fff'}
+                    />
+                  </TouchableOpacity>
                   <TextInput
                     style={styles.input}
                     placeholder="Ask me anything..."
@@ -436,21 +568,21 @@ export default function ChatOverlay({
                     onChangeText={setInputText}
                     multiline
                     maxLength={1000}
-                    editable={!isLoading}
+                    editable={!isLoading && !isUploading}
                   />
                   <TouchableOpacity
                     style={[
                       styles.sendButton,
-                      (!inputText.trim() || isLoading) && styles.sendButtonDisabled,
+                      (!inputText.trim() || isLoading || isUploading) && styles.sendButtonDisabled,
                     ]}
                     onPress={() => handleSendMessage()}
-                    disabled={!inputText.trim() || isLoading}
+                    disabled={!inputText.trim() || isLoading || isUploading}
                     activeOpacity={0.8}
                   >
                     <Ionicons
                       name="arrow-up"
                       size={24}
-                      color={inputText.trim() && !isLoading ? '#000' : '#9ca3af'}
+                      color={inputText.trim() && !isLoading && !isUploading ? '#000' : '#9ca3af'}
                     />
                   </TouchableOpacity>
                 </View>
@@ -590,7 +722,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    paddingLeft: 20,
+    paddingLeft: 12,
     paddingRight: 12,
     paddingTop: 12,
     paddingBottom: 12,
@@ -598,6 +730,13 @@ const styles = StyleSheet.create({
     gap: 8,
     minHeight: 50,
     borderRadius: 24,
+  },
+  attachButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     flex: 1,

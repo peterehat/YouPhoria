@@ -8,10 +8,96 @@
 import { supabase } from '../lib/supabase';
 import Constants from 'expo-constants';
 
-// Backend API URL - update this based on your environment
-// For physical devices, use your computer's IP address instead of localhost
-// Example: 'http://192.168.1.100:3000/api/v1'
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
+// Backend API URL - automatically switches between dev and prod
+// Priority: 1. Environment variable, 2. app.json, 3. Default based on __DEV__
+const getApiUrl = () => {
+  // Check environment variable first (allows override)
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  
+  // Check app.json
+  if (Constants.expoConfig?.extra?.apiUrl) {
+    return Constants.expoConfig.extra.apiUrl;
+  }
+  
+  // Default based on development mode
+  if (__DEV__) {
+    // Development: use local backend
+    return 'http://192.168.7.89:3000/api/v1';
+  } else {
+    // Production: use Railway backend
+    return 'https://you-i-api-production.up.railway.app/api/v1';
+  }
+};
+
+const API_BASE_URL = getApiUrl();
+
+// Log API configuration on module load
+console.log('[ChatService] API Configuration:', {
+  environment: __DEV__ ? 'DEVELOPMENT' : 'PRODUCTION',
+  apiUrl: API_BASE_URL,
+  isLocalhost: API_BASE_URL.includes('localhost'),
+  isLocalIP: API_BASE_URL.match(/192\.168\.|10\.|172\./),
+  isProduction: API_BASE_URL.includes('https://'),
+});
+
+// Warn if using development URL in production build
+if (!__DEV__ && (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('192.168.') || API_BASE_URL.includes('10.') || API_BASE_URL.includes('172.'))) {
+  console.warn('⚠️ [ChatService] WARNING: Production build is configured with a development/local API URL!');
+  console.warn('⚠️ [ChatService] Current API URL:', API_BASE_URL);
+  console.warn('⚠️ [ChatService] Please update app.json extra.apiUrl to your production backend URL');
+}
+
+/**
+ * Detect network error type and provide user-friendly message
+ */
+function getNetworkErrorMessage(error, apiUrl) {
+  const errorMsg = error.message.toLowerCase();
+  
+  // Network timeout
+  if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+    return {
+      title: 'Connection Timeout',
+      message: 'The server is taking too long to respond. Please check your internet connection and try again.',
+      technical: `Timeout connecting to ${apiUrl}`,
+    };
+  }
+  
+  // Network request failed (no connection)
+  if (errorMsg.includes('network request failed') || errorMsg.includes('network error')) {
+    // Check if using local IP (development)
+    if (apiUrl.includes('192.168.') || apiUrl.includes('10.') || apiUrl.includes('172.') || apiUrl.includes('localhost')) {
+      return {
+        title: 'Development Server Not Reachable',
+        message: 'Cannot connect to the development server. Make sure the backend is running and your device is on the same network.',
+        technical: `Cannot reach ${apiUrl}. This is a local development URL.`,
+      };
+    }
+    
+    return {
+      title: 'No Internet Connection',
+      message: 'Unable to connect to the server. Please check your internet connection and try again.',
+      technical: `Network request failed to ${apiUrl}`,
+    };
+  }
+  
+  // Server error (500, 502, 503, etc.)
+  if (errorMsg.includes('server error') || errorMsg.includes('internal error')) {
+    return {
+      title: 'Server Error',
+      message: 'The server encountered an error. Please try again in a few moments.',
+      technical: error.message,
+    };
+  }
+  
+  // Default error
+  return {
+    title: 'Connection Error',
+    message: 'Unable to connect to the server. Please try again.',
+    technical: error.message,
+  };
+}
 
 /**
  * Get authentication headers with Supabase token
@@ -72,18 +158,25 @@ export async function sendMessage(conversationId, message, userId) {
     };
   } catch (error) {
     console.error('[ChatService] Error sending message:', error);
+    console.error('[ChatService] Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      apiUrl: API_BASE_URL,
+    });
     
-    // Provide more helpful error messages
-    let errorMessage = error.message;
-    if (error.message === 'Network request failed' || error.message.includes('Network')) {
-      errorMessage = 'Unable to connect to server. Please check your connection and ensure the backend is running at ' + API_BASE_URL;
-    } else if (error.message.includes('Failed to create conversation')) {
-      errorMessage = 'Server configuration error. Please check backend .env file has SUPABASE_SERVICE_ROLE_KEY and GEMINI_API_KEY set.';
-    }
+    // Get user-friendly error message
+    const errorInfo = getNetworkErrorMessage(error, API_BASE_URL);
     
     return {
       success: false,
-      error: errorMessage,
+      error: errorInfo.message,
+      errorTitle: errorInfo.title,
+      details: {
+        originalError: error.message,
+        technical: errorInfo.technical,
+        apiUrl: API_BASE_URL,
+      },
     };
   }
 }
@@ -122,10 +215,26 @@ export async function getConversations(userId) {
     };
   } catch (error) {
     console.error('[ChatService] Error fetching conversations:', error);
+    console.error('[ChatService] Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      apiUrl: API_BASE_URL,
+    });
+    
+    // Get user-friendly error message
+    const errorInfo = getNetworkErrorMessage(error, API_BASE_URL);
+    
     return {
       success: false,
-      error: error.message,
+      error: errorInfo.message,
+      errorTitle: errorInfo.title,
       conversations: [],
+      details: {
+        originalError: error.message,
+        technical: errorInfo.technical,
+        apiUrl: API_BASE_URL,
+      },
     };
   }
 }

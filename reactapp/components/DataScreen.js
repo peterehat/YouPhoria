@@ -8,13 +8,88 @@ import {
   ScrollView,
   Platform,
   KeyboardAvoidingView,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import Background from './Background';
+import { uploadFile } from '../services/uploadService';
+import useAuthStore from '../store/authStore';
 
 export default function DataScreen() {
-  // Background handled by shared Background component
+  const [isUploading, setIsUploading] = useState(false);
+  const { user } = useAuthStore();
+
+  const handleFileUpload = async () => {
+    try {
+      // Pick a document
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [
+          'application/pdf',
+          'image/jpeg',
+          'image/png',
+          'text/plain',
+          'text/csv',
+          'text/rtf',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/msword',
+        ],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const file = result.assets[0];
+      
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        Alert.alert('File Too Large', 'Please select a file under 10MB.');
+        return;
+      }
+
+      console.log('[DataScreen] Selected file:', {
+        name: file.name,
+        size: file.size,
+        mimeType: file.mimeType,
+      });
+
+      // Show loading
+      setIsUploading(true);
+
+      // Upload file
+      const uploadResult = await uploadFile(
+        file.uri,
+        file.name,
+        file.mimeType,
+        user.id
+      );
+
+      setIsUploading(false);
+
+      if (!uploadResult.success) {
+        Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload file');
+        return;
+      }
+
+      // Show success alert
+      Alert.alert(
+        'File Uploaded Successfully',
+        `${file.name} has been analyzed. ${uploadResult.extractedData.summary}\n\nYou can now ask questions about this data in your conversations.`,
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      console.error('[DataScreen] Error uploading file:', error);
+      setIsUploading(false);
+      Alert.alert('Error', 'Failed to upload file. Please try again.');
+    }
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -33,7 +108,29 @@ export default function DataScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          
+          {/* Upload Button */}
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={handleFileUpload}
+            disabled={isUploading}
+            activeOpacity={0.85}
+          >
+            <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.uploadButtonBlur}>
+              <View style={styles.uploadButtonContent}>
+                {isUploading ? (
+                  <>
+                    <ActivityIndicator size="small" color="#eaff61" />
+                    <Text style={styles.uploadButtonText}>Uploading...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="cloud-upload-outline" size={24} color="#eaff61" />
+                    <Text style={styles.uploadButtonText}>Upload Health Data</Text>
+                  </>
+                )}
+              </View>
+            </BlurView>
+          </TouchableOpacity>
 
           {/* Placeholder content */}
           <View style={styles.placeholderContainer}>
@@ -182,5 +279,36 @@ const styles = StyleSheet.create({
     color: '#e5e7eb',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  uploadButton: {
+    marginBottom: 24,
+  },
+  uploadButtonBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  uploadButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    gap: 12,
+  },
+  uploadButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });

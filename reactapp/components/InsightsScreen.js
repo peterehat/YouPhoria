@@ -14,9 +14,11 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import * as DocumentPicker from 'expo-document-picker';
 import Background from './Background';
 import ChatOverlay from './ChatOverlay';
 import { getConversations, deleteConversation } from '../services/chatService';
+import { uploadFile } from '../services/uploadService';
 import useAuthStore from '../store/authStore';
 
 export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
@@ -51,6 +53,15 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
       setConversations(result.conversations);
     } else {
       console.error('[InsightsScreen] Failed to load conversations:', result.error);
+      
+      // Show user-friendly error alert
+      if (result.errorTitle && result.error) {
+        Alert.alert(
+          result.errorTitle,
+          result.error,
+          [{ text: 'OK' }]
+        );
+      }
     }
     
     setIsLoading(false);
@@ -64,6 +75,75 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
   const handleNewConversation = () => {
     setSelectedConversationId(null);
     setShowChatOverlay(true);
+  };
+
+  const handleFileUpload = async () => {
+    try {
+      // Pick a document
+      const result = await DocumentPicker.getDocumentAsync({
+        type: [
+          'application/pdf',
+          'image/jpeg',
+          'image/png',
+          'text/plain',
+          'text/csv',
+          'text/rtf',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'application/vnd.ms-excel',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'application/msword',
+        ],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        return;
+      }
+
+      const file = result.assets[0];
+      
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        Alert.alert('File Too Large', 'Please select a file under 10MB.');
+        return;
+      }
+
+      console.log('[InsightsScreen] Selected file:', {
+        name: file.name,
+        size: file.size,
+        mimeType: file.mimeType,
+      });
+
+      // Show loading
+      setIsLoading(true);
+
+      // Upload file
+      const uploadResult = await uploadFile(
+        file.uri,
+        file.name,
+        file.mimeType,
+        user.id
+      );
+
+      setIsLoading(false);
+
+      if (!uploadResult.success) {
+        Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload file');
+        return;
+      }
+
+      // Show success alert
+      Alert.alert(
+        'File Uploaded Successfully',
+        `${file.name} has been analyzed. ${uploadResult.extractedData.summary}\n\nYou can now ask questions about this data in your conversations.`,
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      console.error('[InsightsScreen] Error uploading file:', error);
+      setIsLoading(false);
+      Alert.alert('Error', 'Failed to upload file. Please try again.');
+    }
   };
 
   const handleCloseChatOverlay = () => {
@@ -209,6 +289,17 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
                   <Text style={styles.revisitButtonText}>Update You-i Profile</Text>
                 </View>
               </BlurView>
+            </TouchableOpacity>
+
+            {/* Upload File Button */}
+            <TouchableOpacity
+              style={styles.uploadButton}
+              onPress={handleFileUpload}
+              activeOpacity={0.85}
+            >
+              <View style={styles.uploadSquare}>
+                <Ionicons name="cloud-upload-outline" size={24} color="#000" />
+              </View>
             </TouchableOpacity>
 
             {/* New Conversation Button */}
@@ -467,6 +558,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
     paddingHorizontal: 16,
+  },
+  uploadButton: {
+    width: 56,
+    height: 56,
+  },
+  uploadSquare: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#eaff61',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
   },
   newConversationButton: {
     width: 56,

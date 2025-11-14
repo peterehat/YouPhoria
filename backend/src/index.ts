@@ -2,6 +2,15 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// Log environment variable status
+console.log('🔍 Environment Variables Check:');
+console.log('  SUPABASE_URL:', process.env.SUPABASE_URL ? '✅ Set' : '❌ Missing');
+console.log('  SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Set' : '❌ Missing');
+console.log('  GEMINI_API_KEY:', process.env.GEMINI_API_KEY ? '✅ Set' : '❌ Missing');
+console.log('  NODE_ENV:', process.env.NODE_ENV || 'not set (defaulting to development)');
+console.log('  PORT:', process.env.PORT || '3000 (default)');
+console.log('');
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -15,7 +24,7 @@ import { healthRouter } from './routes/health';
 import { apiRouter } from './routes/api';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Security middleware
 app.use(helmet());
@@ -99,7 +108,7 @@ function checkConfiguration() {
 }
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`🚀 Server running on port ${PORT}`);
   logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🔗 CORS origins: ${corsOptions.origin}`);
@@ -110,6 +119,25 @@ app.listen(PORT, () => {
   if (!configOk) {
     logger.warn('⚠️  Server started but chat functionality will NOT work until configuration is fixed!');
   }
+});
+
+// Handle server errors
+server.on('error', (error: any) => {
+  if (error.code === 'EADDRINUSE') {
+    logger.error(`❌ Port ${PORT} is already in use`);
+  } else {
+    logger.error('❌ Server error:', error);
+  }
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    logger.info('Server closed');
+    process.exit(0);
+  });
 });
 
 export default app;

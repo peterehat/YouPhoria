@@ -15,9 +15,11 @@ import {
   getDailyMetrics,
   getHealthEvents,
   getDataSummary,
+  getUploadedFileData,
   formatDailyMetricsForContext,
   formatSummaryForContext,
   formatEventsForContext,
+  formatUploadedDataForContext,
 } from './healthDataRetrieval';
 
 export interface RAGContext {
@@ -280,6 +282,15 @@ async function retrieveHealthData(
         formattedContext += formatEventsForContext(eventsResult.data.slice(0, 10));
         dataTypes.push('health_events');
       }
+    }
+
+    // Get uploaded file data (always retrieve, regardless of date range)
+    const uploadedResult = await getUploadedFileData(supabase, userId, startDate, endDate);
+    
+    if (uploadedResult.success && uploadedResult.data.length > 0) {
+      formattedContext += formatUploadedDataForContext(uploadedResult.data);
+      dataTypes.push('uploaded_files');
+      console.log('[RAG] Retrieved', uploadedResult.data.length, 'uploaded files');
     }
 
     // If no data was retrieved, provide a helpful message

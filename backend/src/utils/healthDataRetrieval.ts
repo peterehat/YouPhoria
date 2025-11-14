@@ -386,13 +386,125 @@ export function formatEventsForContext(events: HealthEvent[]): string {
   return text;
 }
 
+/**
+ * Get uploaded file data for a date range
+ */
+export async function getUploadedFileData(
+  supabase: SupabaseClient,
+  userId: string,
+  startDate: Date,
+  endDate: Date,
+  categories?: string[]
+): Promise<{ success: boolean; data: any[]; error?: string }> {
+  try {
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
+    let query = supabase
+      .from('uploaded_file_data')
+      .select('id, file_name, extracted_data, data_categories, summary, date_range_start, date_range_end, upload_date')
+      .eq('user_id', userId);
+
+    // Filter by date range if the file has date information
+    // Include files where the date range overlaps with our query range
+    query = query.or(
+      `date_range_start.is.null,and(date_range_start.lte.${endDateStr},date_range_end.gte.${startDateStr})`
+    );
+
+    // Filter by categories if specified
+    if (categories && categories.length > 0) {
+      query = query.overlaps('data_categories', categories);
+    }
+
+    query = query.order('upload_date', { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('[HealthDataRetrieval] Error fetching uploaded file data:', error);
+      return { success: false, data: [], error: error.message };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error: any) {
+    console.error('[HealthDataRetrieval] Exception in getUploadedFileData:', error);
+    return { success: false, data: [], error: error.message };
+  }
+}
+
+/**
+ * Format uploaded file data into natural language for RAG context
+ */
+export function formatUploadedDataForContext(uploadedFiles: any[]): string {
+  if (uploadedFiles.length === 0) {
+    return '';
+  }
+
+  let text = `\nUploaded Health Data (${uploadedFiles.length} files):\n\n`;
+
+  uploadedFiles.forEach((file) => {
+    text += `File: ${file.file_name}\n`;
+    
+    if (file.summary) {
+      text += `Summary: ${file.summary}\n`;
+    }
+    
+    if (file.data_categories && file.data_categories.length > 0) {
+      text += `Categories: ${file.data_categories.join(', ')}\n`;
+    }
+    
+    if (file.date_range_start && file.date_range_end) {
+      text += `Date Range: ${file.date_range_start} to ${file.date_range_end}\n`;
+    }
+    
+    // Include extracted data entries
+    const extractedData = file.extracted_data;
+    if (extractedData && extractedData.entries && extractedData.entries.length > 0) {
+      text += `Data Entries (${extractedData.entries.length}):\n`;
+      
+      // Show up to 10 entries per file
+      const entriesToShow = extractedData.entries.slice(0, 10);
+      entriesToShow.forEach((entry: any, index: number) => {
+        if (entry.date) {
+          text += `  ${entry.date}: `;
+        } else {
+          text += `  Entry ${index + 1}: `;
+        }
+        
+        // Format metrics
+        const metricsStr = Object.entries(entry.metrics || {})
+          .map(([key, value]) => `${key}: ${value}`)
+          .join(', ');
+        
+        text += metricsStr;
+        
+        if (entry.notes) {
+          text += ` (${entry.notes})`;
+        }
+        
+        text += '\n';
+      });
+      
+      if (extractedData.entries.length > 10) {
+        text += `  ... and ${extractedData.entries.length - 10} more entries\n`;
+      }
+    }
+    
+    text += '\n';
+  });
+
+  return text;
+}
+
 export default {
   getDailyMetrics,
   getHealthEvents,
   getDataSummary,
   getMetricTimeSeries,
+  getUploadedFileData,
   formatDailyMetricsForContext,
   formatSummaryForContext,
   formatEventsForContext,
+  formatUploadedDataForContext,
 };
 

@@ -276,6 +276,8 @@ PODS:
     - ExpoModulesCore
   - ExpoCrypto (15.0.7):
     - ExpoModulesCore
+  - ExpoDocumentPicker (13.1.6):
+    - ExpoModulesCore
   - ExpoFileSystem (18.1.11):
     - ExpoModulesCore
   - ExpoFont (14.0.9):
@@ -2061,6 +2063,7 @@ DEPENDENCIES:
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
   - ExpoBlur (from `../node_modules/expo-blur/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
+  - ExpoDocumentPicker (from `../node_modules/expo-document-picker/ios`)
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoFont (from `../node_modules/expo-font/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
@@ -2176,6 +2179,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-blur/ios"
   ExpoCrypto:
     :path: "../node_modules/expo-crypto/ios"
+  ExpoDocumentPicker:
+    :path: "../node_modules/expo-document-picker/ios"
   ExpoFileSystem:
     :path: "../node_modules/expo-file-system/ios"
   ExpoFont:
@@ -2351,6 +2356,7 @@ SPEC CHECKSUMS:
   ExpoAsset: 7bdbbacf4e6752ae6e3cf70555cee076f6229e6e
   ExpoBlur: 846780b2c90f59e964b9a50385d4deb67174ebfb
   ExpoCrypto: 4c50a152f5939e16a2ca10be77b002a3a391c4d3
+  ExpoDocumentPicker: 2dbf1b971faa02d4bef242460094e390703b0f9b
   ExpoFileSystem: 9681caebda23fa1b38a12a9c68b2bade7072ce20
   ExpoFont: b881d43057dceb7b31ff767b24f612609e80f60f
   ExpoKeepAwake: e8dedc115d9f6f24b153ccd2d1d8efcdfd68a527
