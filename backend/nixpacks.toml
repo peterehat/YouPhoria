@@ -10,3 +10,7 @@ cmds = ['npm run build']
 [start]
 cmd = 'npm start'
 
+# Monorepo configuration
+[variables]
+NIXPACKS_PATH = '/app'
+

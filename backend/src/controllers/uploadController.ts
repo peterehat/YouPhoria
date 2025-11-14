@@ -75,8 +75,8 @@ export const uploadController = {
         });
       }
 
-      // Parse file and extract health data
-      console.log('[Upload] Parsing file with AI...');
+      // Parse file and extract data
+      console.log('[Upload] Extracting content from file...');
       const parseResult = await parseFile(file.path, file.originalname, file.mimetype);
 
       console.log('[Upload] Parse result:', {
@@ -84,28 +84,19 @@ export const uploadController = {
         confidence: parseResult.extractedData?.confidence,
         dataType: parseResult.extractedData?.dataType,
         entriesCount: parseResult.extractedData?.entries?.length,
+        summary: parseResult.extractedData?.summary,
       });
 
       if (!parseResult.success || !parseResult.extractedData) {
         fs.unlinkSync(file.path);
         return res.status(400).json({
           success: false,
-          error: parseResult.error || 'Failed to extract health data from file',
+          error: parseResult.error || 'Failed to extract data from file',
         });
       }
 
-      // Check if any meaningful data was extracted
-      if (parseResult.extractedData.confidence < 0.1) {
-        fs.unlinkSync(file.path);
-        return res.status(400).json({
-          success: false,
-          error: 'No health data found in file. Please upload files containing health metrics like nutrition logs, exercise data, lab results, or fitness app screenshots.',
-          details: {
-            confidence: parseResult.extractedData.confidence,
-            dataType: parseResult.extractedData.dataType,
-          },
-        });
-      }
+      // Accept all uploads - let the AI determine relevance during conversations
+      console.log('[Upload] File content extracted successfully');
 
       // Upload file to Supabase Storage
       console.log('[Upload] Uploading to Supabase Storage...');

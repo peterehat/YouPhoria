@@ -18,7 +18,8 @@ const getApiUrl = () => {
     return Constants.expoConfig.extra.apiUrl;
   }
   if (__DEV__) {
-    return 'http://192.168.7.89:3000/api/v1';
+    // For simulator, use localhost
+    return 'http://localhost:3000/api/v1';
   } else {
     return 'https://you-i-api-production.up.railway.app/api/v1';
   }

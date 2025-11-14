@@ -15,6 +15,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
+import Constants from 'expo-constants';
 import Background from './Background';
 import ChatOverlay from './ChatOverlay';
 import { getConversations, deleteConversation } from '../services/chatService';
@@ -27,6 +28,24 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
   const [showChatOverlay, setShowChatOverlay] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const { user } = useAuthStore();
+  
+  // Get API URL for debug display
+  const getApiUrl = () => {
+    if (process.env.EXPO_PUBLIC_API_URL) {
+      return process.env.EXPO_PUBLIC_API_URL;
+    }
+    if (Constants.expoConfig?.extra?.apiUrl) {
+      return Constants.expoConfig.extra.apiUrl;
+    }
+    if (__DEV__) {
+      return 'http://localhost:3000/api/v1';
+    }
+    return 'https://you-i-api-production.up.railway.app/api/v1';
+  };
+  
+  const apiUrl = getApiUrl();
+  const isProduction = apiUrl.includes('https://');
+  const isLocalhost = apiUrl.includes('localhost');
 
   useEffect(() => {
     if (user?.id) {
@@ -339,6 +358,20 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
                 {conversations.map(conversation => renderConversationItem(conversation))}
               </View>
             )}
+            
+            {/* API Debug Indicator */}
+            {__DEV__ && (
+              <View style={styles.apiIndicatorInline}>
+                <BlurView intensity={80} tint="dark" style={styles.apiIndicatorBlur}>
+                  <View style={styles.apiIndicatorContent}>
+                    <View style={[styles.apiDot, isProduction ? styles.apiDotProd : styles.apiDotLocal]} />
+                    <Text style={styles.apiText} numberOfLines={1}>
+                      {isProduction ? '🌐 Production' : isLocalhost ? '💻 Local' : '🔧 Dev'}: {apiUrl.replace('/api/v1', '')}
+                    </Text>
+                  </View>
+                </BlurView>
+              </View>
+            )}
           </View>
         </ScrollView>
       </Background>
@@ -598,5 +631,41 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 24,
     elevation: 8,
+  },
+  apiIndicatorInline: {
+    marginHorizontal: 16,
+    marginTop: 24,
+    marginBottom: 120,
+  },
+  apiIndicatorBlur: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  apiIndicatorContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    gap: 8,
+  },
+  apiDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  apiDotLocal: {
+    backgroundColor: '#eaff61',
+  },
+  apiDotProd: {
+    backgroundColor: '#10b981',
+  },
+  apiText: {
+    fontSize: 11,
+    color: '#fff',
+    flex: 1,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
 });

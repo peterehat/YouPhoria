@@ -190,13 +190,13 @@ async function extractDataFromText(
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = `You are a health data extraction AI. Analyze the following document and extract structured health-related data.
+    const prompt = `You are a data extraction AI. Analyze the following document and extract any relevant information that could be useful for health and wellness insights.
 
 Document: ${fileName}
 Content:
 ${content.substring(0, 10000)} ${content.length > 10000 ? '...(truncated)' : ''}
 
-Extract health data in the following JSON format (respond with ONLY valid JSON, no markdown):
+Extract data in the following JSON format (respond with ONLY valid JSON, no markdown):
 {
   "dataType": "lab_results|nutrition_log|exercise_log|medical_report|sleep_log|vitals|other",
   "dateRange": {
@@ -213,17 +213,17 @@ Extract health data in the following JSON format (respond with ONLY valid JSON, 
       "notes": "any relevant notes"
     }
   ],
-  "summary": "Brief summary of the data in 1-2 sentences",
+  "summary": "Brief summary of the document content in 1-2 sentences",
   "confidence": 0.0-1.0
 }
 
 Guidelines:
-- Extract all health-related metrics (steps, calories, heart rate, sleep, weight, blood pressure, lab values, etc.)
+- Extract any health-related metrics if present (steps, calories, heart rate, sleep, weight, blood pressure, lab values, etc.)
 - If dates are present, extract them. If not, set dateRange to null.
 - Group related data into entries by date if possible
 - Use standard metric names (e.g., "steps", "calories", "heart_rate_bpm", "weight_kg")
-- Set confidence based on how clear and structured the data is
-- If no health data is found, return confidence: 0 and empty entries array`;
+- Set confidence to at least 0.5 if you can extract any meaningful information from the document
+- Even if no explicit health data is found, extract the main content and set dataType to "other" with confidence 0.3`;
 
     const result = await model.generateContent(prompt);
     const response = result.response.text();
@@ -264,7 +264,7 @@ async function extractDataFromImage(filePath: string): Promise<ExtractedData | n
     const ext = filePath.split('.').pop()?.toLowerCase();
     const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
 
-    const prompt = `You are a health data extraction AI. Analyze this image and extract any health-related data visible.
+    const prompt = `You are a data extraction AI. Analyze this image and extract any relevant information that could be useful for health and wellness insights.
 
 This could be:
 - Screenshots of fitness apps
@@ -274,6 +274,7 @@ This could be:
 - Sleep tracking data
 - Vital signs displays
 - Any other health metrics
+- General wellness-related content
 
 Extract the data in the following JSON format (respond with ONLY valid JSON, no markdown):
 {
@@ -296,7 +297,10 @@ Extract the data in the following JSON format (respond with ONLY valid JSON, no 
   "confidence": 0.0-1.0
 }
 
-If the image contains no health data, return confidence: 0 and empty entries array.`;
+Guidelines:
+- Extract any visible text, numbers, or data from the image
+- Set confidence to at least 0.5 if you can read any text or data
+- Even if no explicit health data is found, describe what's in the image and set dataType to "other" with confidence 0.3`;
 
     const result = await model.generateContent([
       prompt,

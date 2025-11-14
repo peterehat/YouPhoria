@@ -23,8 +23,8 @@ const getApiUrl = () => {
   
   // Default based on development mode
   if (__DEV__) {
-    // Development: use local backend
-    return 'http://192.168.7.89:3000/api/v1';
+    // For simulator, use localhost; for production, use Railway
+    return 'http://localhost:3000/api/v1';
   } else {
     // Production: use Railway backend
     return 'https://you-i-api-production.up.railway.app/api/v1';
