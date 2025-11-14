@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import healthDataQueryService from '../services/healthDataQueryService';
+import historicalSyncService from '../services/historicalSyncService';
+import { getCanonicalData } from '../services/dataDeduplicationService';
+import useAuthStore from './authStore';
 
 const useAppStore = create((set, get) => ({
   // State
@@ -22,7 +26,7 @@ const useAppStore = create((set, get) => ({
 
   // Connected Apps
   fetchConnectedApps: async () => {
-    const { user } = get();
+    const user = useAuthStore.getState().user;
     if (!user) return;
 
     set((state) => ({ loading: { ...state.loading, apps: true } }));
@@ -44,7 +48,7 @@ const useAppStore = create((set, get) => ({
   },
 
   addConnectedApp: async (appData) => {
-    const { user } = get();
+    const user = useAuthStore.getState().user;
     if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
@@ -124,7 +128,7 @@ const useAppStore = create((set, get) => ({
 
   // Connected Devices
   fetchConnectedDevices: async () => {
-    const { user } = get();
+    const user = useAuthStore.getState().user;
     if (!user) return;
 
     set((state) => ({ loading: { ...state.loading, devices: true } }));
@@ -146,7 +150,7 @@ const useAppStore = create((set, get) => ({
   },
 
   addConnectedDevice: async (deviceData) => {
-    const { user } = get();
+    const user = useAuthStore.getState().user;
     if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
@@ -225,7 +229,7 @@ const useAppStore = create((set, get) => ({
 
   // Health Data
   fetchHealthData: async (filters = {}) => {
-    const { user } = get();
+    const user = useAuthStore.getState().user;
     if (!user) return;
 
     set((state) => ({ loading: { ...state.loading, healthData: true } }));
@@ -262,7 +266,7 @@ const useAppStore = create((set, get) => ({
   },
 
   addHealthData: async (healthDataArray) => {
-    const { user } = get();
+    const user = useAuthStore.getState().user;
     if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
@@ -319,7 +323,7 @@ const useAppStore = create((set, get) => ({
 
   // Sync health metrics to Supabase
   syncHealthMetrics: async (metricsArray) => {
-    const { user } = get();
+    const user = useAuthStore.getState().user;
     if (!user) return { success: false, error: 'User not authenticated' };
 
     try {
@@ -344,7 +348,7 @@ const useAppStore = create((set, get) => ({
 
   // Fetch health metrics from Supabase
   fetchHealthMetrics: async (startDate, endDate) => {
-    const { user } = get();
+    const user = useAuthStore.getState().user;
     if (!user) return { success: false, error: 'User not authenticated' };
 
     set((state) => ({ loading: { ...state.loading, healthData: true } }));
@@ -407,6 +411,154 @@ const useAppStore = create((set, get) => ({
       set({ error: error.message });
       return { success: false, error: error.message };
     }
+  },
+
+  // ===== NEW QUERY SERVICE METHODS =====
+
+  // Get time-series data for a metric
+  getTimeSeriesData: async (metricType, startDate, endDate, options = {}) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await healthDataQueryService.getTimeSeriesData(
+      user.id,
+      metricType,
+      startDate,
+      endDate,
+      options
+    );
+  },
+
+  // Get correlation data for multiple metrics
+  getCorrelationData: async (metricTypes, startDate, endDate, options = {}) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await healthDataQueryService.getCorrelationData(
+      user.id,
+      metricTypes,
+      startDate,
+      endDate,
+      options
+    );
+  },
+
+  // Get daily aggregated metrics
+  getDailyMetrics: async (startDate, endDate, options = {}) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await healthDataQueryService.getDailyMetrics(
+      user.id,
+      startDate,
+      endDate,
+      options
+    );
+  },
+
+  // Get health events (workouts, meals, etc.)
+  getHealthEvents: async (startDate, endDate, options = {}) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await healthDataQueryService.getHealthEvents(
+      user.id,
+      startDate,
+      endDate,
+      options
+    );
+  },
+
+  // Semantic search across health data
+  searchHealthData: async (searchQuery, options = {}) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await healthDataQueryService.semanticSearch(
+      user.id,
+      searchQuery,
+      options
+    );
+  },
+
+  // Get data summary for AI context
+  getDataSummary: async (startDate, endDate) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await healthDataQueryService.getDataSummary(
+      user.id,
+      startDate,
+      endDate
+    );
+  },
+
+  // Export data for RAG/AI analysis
+  exportForRAG: async (startDate, endDate, options = {}) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await healthDataQueryService.exportForRAG(
+      user.id,
+      startDate,
+      endDate,
+      options
+    );
+  },
+
+  // Get canonical data (deduplicated)
+  getCanonicalHealthData: async (filters = {}) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await getCanonicalData(user.id, filters);
+  },
+
+  // ===== HISTORICAL SYNC METHODS =====
+
+  // Sync historical data for all connected apps
+  syncHistoricalData: async (options = {}) => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    set((state) => ({ loading: { ...state.loading, apps: true } }));
+    try {
+      const result = await historicalSyncService.syncAllHistoricalData(user.id, options);
+      
+      // Refresh connected apps to update sync status
+      await get().fetchConnectedApps();
+      
+      return result;
+    } catch (error) {
+      set({ error: error.message });
+      return { success: false, error: error.message };
+    } finally {
+      set((state) => ({ loading: { ...state.loading, apps: false } }));
+    }
+  },
+
+  // Get sync status for all apps
+  getSyncStatus: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await historicalSyncService.getSyncStatus(user.id);
+  },
+
+  // Schedule background sync
+  scheduleBackgroundSync: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await historicalSyncService.scheduleBackgroundSync(user.id);
+  },
+
+  // Estimate sync time
+  estimateSyncTime: async () => {
+    const user = useAuthStore.getState().user;
+    if (!user) return { success: false, error: 'User not authenticated' };
+
+    return await historicalSyncService.estimateSyncTime(user.id);
   },
 }));
 

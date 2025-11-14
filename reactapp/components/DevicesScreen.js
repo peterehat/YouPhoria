@@ -24,6 +24,7 @@ export default function DevicesScreen() {
       <Background style={styles.backgroundImage}>
         {/* Header */}
         <View style={styles.header}>
+          <Ionicons name="phone-portrait-outline" size={24} color="#eaff61" />
           <Text style={styles.headerTitle}>Devices</Text>
         </View>
 
@@ -78,6 +79,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 20,
     zIndex: 20,
+    gap: 8,
   },
   headerTitle: {
     fontSize: 24,

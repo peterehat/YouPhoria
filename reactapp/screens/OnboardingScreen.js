@@ -12,42 +12,48 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
+  PanResponder,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import Background from '../components/Background';
 import useAuthStore from '../store/authStore';
 import { supabase } from '../lib/supabase';
 
 const { width } = Dimensions.get('window');
 
-const OnboardingScreen = ({ onComplete }) => {
+const OnboardingScreen = ({ onComplete, onClose }) => {
   const { user } = useAuthStore();
   const [currentStep, setCurrentStep] = useState(0);
   const [showPart2, setShowPart2] = useState(false);
   const scrollViewRef = useRef(null);
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const [loadingExisting, setLoadingExisting] = useState(true);
+  
+  // PanResponder refs for sliders (must be at top level)
+  const moodPanResponderRef = useRef(null);
+  const alignmentPanResponderRef = useRef(null);
 
   // Part 1 data
   const [firstName, setFirstName] = useState('');
   const [birthday, setBirthday] = useState({ month: '', day: '', year: '' });
   const [gender, setGender] = useState('');
-  const [mainGoal, setMainGoal] = useState('');
+  const [mainGoal, setMainGoal] = useState([]);
   const [moodToday, setMoodToday] = useState(5);
 
   // Part 2 data
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
-  const [sleepHours, setSleepHours] = useState('');
-  const [activityFrequency, setActivityFrequency] = useState('');
-  const [eatingHabits, setEatingHabits] = useState('');
-  const [morningFeeling, setMorningFeeling] = useState('');
+  const [sleepHours, setSleepHours] = useState([]);
+  const [activityFrequency, setActivityFrequency] = useState([]);
+  const [eatingHabits, setEatingHabits] = useState([]);
+  const [morningFeeling, setMorningFeeling] = useState([]);
   const [currentState, setCurrentState] = useState('');
-  const [imbalanceArea, setImbalanceArea] = useState('');
+  const [imbalanceArea, setImbalanceArea] = useState([]);
   const [alignmentScore, setAlignmentScore] = useState(5);
   const [thirtyDayGoal, setThirtyDayGoal] = useState('');
 
-  const genderOptions = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
+  const genderOptions = ['Male', 'Female', 'Prefer not to say'];
   const mainGoalOptions = ['More energy', 'Less stress', 'Better sleep', 'Get in shape', 'Feel happier overall'];
   const sleepOptions = ['<5', '5–6', '7–8', '>8'];
   const activityOptions = ['Rarely', '1–2× / week', '3–4×', '5+'];
@@ -88,7 +94,7 @@ const OnboardingScreen = ({ onComplete }) => {
             });
           }
           setGender(existing.gender || '');
-          setMainGoal(existing.mainGoal || '');
+          setMainGoal(Array.isArray(existing.mainGoal) ? existing.mainGoal : (existing.mainGoal ? [existing.mainGoal] : []));
 
           const parsedMood = Number(existing.moodToday);
           if (!Number.isNaN(parsedMood)) {
@@ -97,12 +103,12 @@ const OnboardingScreen = ({ onComplete }) => {
 
           setHeight(existing.height || '');
           setWeight(existing.weight || '');
-          setSleepHours(existing.sleepHours || '');
-          setActivityFrequency(existing.activityFrequency || '');
-          setEatingHabits(existing.eatingHabits || '');
-          setMorningFeeling(existing.morningFeeling || '');
+          setSleepHours(Array.isArray(existing.sleepHours) ? existing.sleepHours : (existing.sleepHours ? [existing.sleepHours] : []));
+          setActivityFrequency(Array.isArray(existing.activityFrequency) ? existing.activityFrequency : (existing.activityFrequency ? [existing.activityFrequency] : []));
+          setEatingHabits(Array.isArray(existing.eatingHabits) ? existing.eatingHabits : (existing.eatingHabits ? [existing.eatingHabits] : []));
+          setMorningFeeling(Array.isArray(existing.morningFeeling) ? existing.morningFeeling : (existing.morningFeeling ? [existing.morningFeeling] : []));
           setCurrentState(existing.currentState || '');
-          setImbalanceArea(existing.imbalanceArea || '');
+          setImbalanceArea(Array.isArray(existing.imbalanceArea) ? existing.imbalanceArea : (existing.imbalanceArea ? [existing.imbalanceArea] : []));
 
           const parsedAlignment = Number(existing.alignmentScore);
           if (!Number.isNaN(parsedAlignment)) {
@@ -138,13 +144,18 @@ const OnboardingScreen = ({ onComplete }) => {
   }, [user]);
 
   const getProgress = () => {
+    const hasValue = (val) => {
+      if (Array.isArray(val)) return val.length > 0;
+      return Boolean(val);
+    };
+
     if (!showPart2) {
       // Part 1: 5 questions
-      const answered = [firstName, birthday.month, gender, mainGoal, moodToday].filter(Boolean).length;
+      const answered = [firstName, birthday.month, gender, hasValue(mainGoal), moodToday].filter(Boolean).length;
       return (answered / 5) * 50; // Part 1 is 50% of total
     } else {
       // Part 2: 10 questions
-      const answered = [height, weight, sleepHours, activityFrequency, eatingHabits, morningFeeling, currentState, imbalanceArea, alignmentScore, thirtyDayGoal].filter(Boolean).length;
+      const answered = [height, weight, hasValue(sleepHours), hasValue(activityFrequency), hasValue(eatingHabits), hasValue(morningFeeling), currentState, hasValue(imbalanceArea), alignmentScore, thirtyDayGoal].filter(Boolean).length;
       return 50 + (answered / 10) * 50; // Part 2 is the remaining 50%
     }
   };
@@ -183,7 +194,7 @@ const OnboardingScreen = ({ onComplete }) => {
     const day = birthday.day.trim();
     const year = birthday.year.trim();
 
-    if (!trimmedName || !month || !day || !year || !gender || !mainGoal) {
+    if (!trimmedName || !month || !day || !year || !gender || (Array.isArray(mainGoal) ? mainGoal.length === 0 : !mainGoal)) {
       Alert.alert('Please complete all fields', 'We need these details to personalize your experience.');
       return;
     }
@@ -228,15 +239,17 @@ const OnboardingScreen = ({ onComplete }) => {
   };
 
   const handleComplete = async () => {
+    const hasValue = (val) => Array.isArray(val) ? val.length > 0 : Boolean(val);
+    
     if (
       !height.trim() ||
       !weight.trim() ||
-      !sleepHours ||
-      !activityFrequency ||
-      !eatingHabits ||
-      !morningFeeling ||
+      !hasValue(sleepHours) ||
+      !hasValue(activityFrequency) ||
+      !hasValue(eatingHabits) ||
+      !hasValue(morningFeeling) ||
       !currentState ||
-      !imbalanceArea ||
+      !hasValue(imbalanceArea) ||
       !thirtyDayGoal.trim()
     ) {
       Alert.alert('Almost there!', 'Please answer all questions to complete your profile.');
@@ -287,8 +300,34 @@ const OnboardingScreen = ({ onComplete }) => {
     }
   };
 
+  // Initialize mood PanResponder
+  if (!moodPanResponderRef.current) {
+    const sliderWidth = width - 80;
+    moodPanResponderRef.current = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderGrant: (evt, gestureState) => {
+        const locationX = Math.max(0, Math.min(evt.nativeEvent.locationX, sliderWidth));
+        const percentage = locationX / sliderWidth;
+        const value = Math.round(percentage * 10);
+        setMoodToday(Math.max(0, Math.min(10, value)));
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const locationX = Math.max(0, Math.min(evt.nativeEvent.locationX, sliderWidth));
+        const percentage = locationX / sliderWidth;
+        const value = Math.round(percentage * 10);
+        setMoodToday(Math.max(0, Math.min(10, value)));
+      },
+      onPanResponderRelease: () => true,
+      onPanResponderTerminate: () => true,
+    });
+  }
+
   const renderMoodSlider = () => {
     const emojis = ['😔', '😕', '😐', '🙂', '😊', '😄', '😁', '🤩', '😍', '🥳'];
+
     return (
       <View style={styles.sliderContainer}>
         <View style={styles.emojiRow}>
@@ -296,24 +335,42 @@ const OnboardingScreen = ({ onComplete }) => {
           <Text style={styles.emojiLabel}>😐</Text>
           <Text style={styles.emojiLabel}>😄</Text>
         </View>
-        <View style={styles.sliderTrack}>
-          <View style={[styles.sliderFill, { width: `${(moodToday / 10) * 100}%` }]} />
-          <View style={[styles.sliderThumb, { left: `${(moodToday / 10) * 100}%` }]}>
-            <Text style={styles.sliderThumbEmoji}>{emojis[moodToday]}</Text>
+        <View style={styles.sliderWrapper} {...moodPanResponderRef.current.panHandlers}>
+          <View style={styles.sliderTrack}>
+            <View style={[styles.sliderFill, { width: `${(moodToday / 10) * 100}%` }]} />
+            <View style={[styles.sliderThumb, { left: `${(moodToday / 10) * 100}%` }]}>
+              <Text style={styles.sliderThumbEmoji}>{emojis[moodToday]}</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.sliderTouchArea}>
-          {Array.from({ length: 11 }).map((_, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.sliderTouchZone}
-              onPress={() => setMoodToday(index)}
-            />
-          ))}
         </View>
       </View>
     );
   };
+
+  // Initialize alignment PanResponder
+  if (!alignmentPanResponderRef.current) {
+    const sliderWidth = width - 80;
+    alignmentPanResponderRef.current = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponderCapture: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponderCapture: () => true,
+      onPanResponderGrant: (evt, gestureState) => {
+        const locationX = Math.max(0, Math.min(evt.nativeEvent.locationX, sliderWidth));
+        const percentage = locationX / sliderWidth;
+        const value = Math.round(percentage * 10);
+        setAlignmentScore(Math.max(0, Math.min(10, value)));
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        const locationX = Math.max(0, Math.min(evt.nativeEvent.locationX, sliderWidth));
+        const percentage = locationX / sliderWidth;
+        const value = Math.round(percentage * 10);
+        setAlignmentScore(Math.max(0, Math.min(10, value)));
+      },
+      onPanResponderRelease: () => true,
+      onPanResponderTerminate: () => true,
+    });
+  }
 
   const renderAlignmentSlider = () => {
     return (
@@ -323,20 +380,13 @@ const OnboardingScreen = ({ onComplete }) => {
           <Text style={styles.sliderNumber}>5</Text>
           <Text style={styles.sliderNumber}>10</Text>
         </View>
-        <View style={styles.sliderTrack}>
-          <View style={[styles.sliderFill, { width: `${(alignmentScore / 10) * 100}%` }]} />
-          <View style={[styles.sliderThumb, { left: `${(alignmentScore / 10) * 100}%` }]}>
-            <Text style={styles.sliderThumbText}>{alignmentScore}</Text>
+        <View style={styles.sliderWrapper} {...alignmentPanResponderRef.current.panHandlers}>
+          <View style={styles.sliderTrack}>
+            <View style={[styles.sliderFill, { width: `${(alignmentScore / 10) * 100}%` }]} />
+            <View style={[styles.sliderThumb, { left: `${(alignmentScore / 10) * 100}%` }]}>
+              <Text style={styles.sliderThumbText}>{alignmentScore}</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.sliderTouchArea}>
-          {Array.from({ length: 11 }).map((_, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.sliderTouchZone}
-              onPress={() => setAlignmentScore(index)}
-            />
-          ))}
         </View>
         <View style={styles.sliderLabels}>
           <Text style={styles.sliderLabelText}>Disconnected</Text>
@@ -346,7 +396,30 @@ const OnboardingScreen = ({ onComplete }) => {
     );
   };
 
-  const renderMultipleChoice = (options, selected, onSelect) => {
+  const renderMultipleChoice = (options, selected, onSelect, allowMultiple = true) => {
+    const isSelected = (option) => {
+      if (Array.isArray(selected)) {
+        return selected.includes(option);
+      }
+      return selected === option;
+    };
+
+    const handleSelect = (option) => {
+      if (allowMultiple) {
+        if (Array.isArray(selected)) {
+          if (selected.includes(option)) {
+            onSelect(selected.filter(item => item !== option));
+          } else {
+            onSelect([...selected, option]);
+          }
+        } else {
+          onSelect([option]);
+        }
+      } else {
+        onSelect(option);
+      }
+    };
+
     return (
       <View style={styles.optionsContainer}>
         {options.map((option) => (
@@ -354,19 +427,19 @@ const OnboardingScreen = ({ onComplete }) => {
             key={option}
             style={[
               styles.optionButton,
-              selected === option && styles.optionButtonSelected,
+              isSelected(option) && styles.optionButtonSelected,
             ]}
-            onPress={() => onSelect(option)}
+            onPress={() => handleSelect(option)}
           >
             <View style={[
               styles.checkbox,
-              selected === option && styles.checkboxSelected,
+              isSelected(option) && styles.checkboxSelected,
             ]}>
-              {selected === option && <Text style={styles.checkmark}>✓</Text>}
+              {isSelected(option) && <Text style={styles.checkmark}>✓</Text>}
             </View>
             <Text style={[
               styles.optionText,
-              selected === option && styles.optionTextSelected,
+              isSelected(option) && styles.optionTextSelected,
             ]}>
               {option}
             </Text>
@@ -445,7 +518,7 @@ const OnboardingScreen = ({ onComplete }) => {
       <View style={styles.questionSection}>
         <Text style={styles.questionNumber}>3.</Text>
         <Text style={styles.questionText}>How do you identify?</Text>
-        {renderMultipleChoice(genderOptions, gender, setGender)}
+        {renderMultipleChoice(genderOptions, gender, setGender, false)}
       </View>
 
       <View style={styles.questionSection}>
@@ -548,7 +621,7 @@ const OnboardingScreen = ({ onComplete }) => {
 
       <View style={styles.questionSection}>
         <Text style={styles.questionText}>Which feels most true today?</Text>
-        {renderMultipleChoice(stateOptions, currentState, setCurrentState)}
+        {renderMultipleChoice(stateOptions, currentState, setCurrentState, false)}
       </View>
 
       <View style={styles.questionSection}>
@@ -623,6 +696,16 @@ const OnboardingScreen = ({ onComplete }) => {
         
         {/* Progress Bar */}
         <View style={styles.progressBarContainer}>
+          {onClose && (
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={onClose}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+          )}
+          <Text style={styles.pageTitle}>Youphoric Form</Text>
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${getProgress()}%` }]} />
           </View>
@@ -667,6 +750,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 10,
+    position: 'relative',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  pageTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textAlign: 'center',
+    marginTop: 50,
+    marginBottom: 16,
+    letterSpacing: 0.5,
   },
   progressBar: {
     height: 4,
@@ -674,6 +779,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     overflow: 'hidden',
     marginBottom: 8,
+    marginTop: 8,
   },
   progressFill: {
     height: '100%',
@@ -822,12 +928,15 @@ const styles = StyleSheet.create({
     color: '#888888',
     fontWeight: '600',
   },
+  sliderWrapper: {
+    paddingVertical: 20,
+    marginHorizontal: -5,
+  },
   sliderTrack: {
     height: 8,
     backgroundColor: '#333333',
     borderRadius: 4,
     position: 'relative',
-    marginBottom: 8,
   },
   sliderFill: {
     height: '100%',
@@ -857,15 +966,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#000000',
-  },
-  sliderTouchArea: {
-    flexDirection: 'row',
-    height: 40,
-    marginTop: -40,
-  },
-  sliderTouchZone: {
-    flex: 1,
-    height: '100%',
   },
   sliderLabels: {
     flexDirection: 'row',

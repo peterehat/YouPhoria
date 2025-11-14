@@ -1,21 +1,176 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  ImageBackground,
   StyleSheet,
   ScrollView,
   Platform,
   KeyboardAvoidingView,
-  Image,
+  RefreshControl,
+  Alert,
+  ActionSheetIOS,
+  ActivityIndicator,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import Background from './Background';
+import ChatOverlay from './ChatOverlay';
+import { getConversations, deleteConversation } from '../services/chatService';
+import useAuthStore from '../store/authStore';
 
 export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
-  // Background handled by shared Background component
+  const [conversations, setConversations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // Start as true to prevent flash
+  const [showChatOverlay, setShowChatOverlay] = useState(false);
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
+  const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (user?.id) {
+      loadConversations();
+    } else {
+      setIsLoading(false); // If no user, stop loading
+    }
+  }, [user]);
+
+  const loadConversations = async () => {
+    if (!user?.id) {
+      console.log('[InsightsScreen] No user ID available');
+      return;
+    }
+    
+    console.log('[InsightsScreen] Loading conversations for user:', user.id);
+    setIsLoading(true);
+    const result = await getConversations(user.id);
+    
+    console.log('[InsightsScreen] getConversations result:', result);
+    
+    if (result.success) {
+      console.log('[InsightsScreen] Setting conversations:', result.conversations.length);
+      setConversations(result.conversations);
+    } else {
+      console.error('[InsightsScreen] Failed to load conversations:', result.error);
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleOpenConversation = (conversationId) => {
+    setSelectedConversationId(conversationId);
+    setShowChatOverlay(true);
+  };
+
+  const handleNewConversation = () => {
+    setSelectedConversationId(null);
+    setShowChatOverlay(true);
+  };
+
+  const handleCloseChatOverlay = () => {
+    setShowChatOverlay(false);
+    setSelectedConversationId(null);
+    // Refresh conversations when chat closes
+    loadConversations();
+  };
+
+  const handleLongPress = (conversation) => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Delete Conversation'],
+          destructiveButtonIndex: 1,
+          cancelButtonIndex: 0,
+          title: conversation.title,
+        },
+        async (buttonIndex) => {
+          if (buttonIndex === 1) {
+            const result = await deleteConversation(conversation.id, user.id);
+            if (result.success) {
+              loadConversations();
+            } else {
+              Alert.alert('Error', 'Failed to delete conversation');
+            }
+          }
+        }
+      );
+    } else {
+      // Android fallback
+      Alert.alert(
+        'Delete Conversation',
+        `Are you sure you want to delete "${conversation.title}"?`,
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              const result = await deleteConversation(conversation.id, user.id);
+              if (result.success) {
+                loadConversations();
+              } else {
+                Alert.alert('Error', 'Failed to delete conversation');
+              }
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    
+    // Reset time to midnight for accurate day comparison
+    const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const diffTime = nowOnly - dateOnly;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return 'Today';
+    } else if (diffDays === 1) {
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      return `${diffDays} days ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  };
+
+  const renderConversationItem = (conversation) => {
+    return (
+      <TouchableOpacity
+        key={conversation.id}
+        style={styles.conversationItem}
+        onPress={() => handleOpenConversation(conversation.id)}
+        onLongPress={() => handleLongPress(conversation)}
+        activeOpacity={0.8}
+      >
+        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.conversationBlur}>
+          <View style={styles.conversationContent}>
+            <View style={styles.conversationHeader}>
+              <View style={styles.conversationIcon}>
+                <Ionicons name="chatbubbles" size={20} color="#eaff61" />
+              </View>
+              <View style={styles.conversationInfo}>
+                <Text style={styles.conversationTitle} numberOfLines={1}>
+                  {conversation.title}
+                </Text>
+                <Text style={styles.conversationPreview} numberOfLines={2}>
+                  {conversation.preview || 'No messages yet'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </BlurView>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <KeyboardAvoidingView 
@@ -25,6 +180,7 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
       <Background style={styles.backgroundImage}>
         {/* Header */}
         <View style={styles.header}>
+          <Ionicons name="analytics-outline" size={24} color="#eaff61" />
           <Text style={styles.headerTitle}>You-i Insights</Text>
         </View>
 
@@ -32,36 +188,76 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={loadConversations}
+              tintColor="#fff"
+            />
+          }
         >
-          
-
-          {/* Placeholder content */}
-          <View style={styles.placeholderContainer}>
-            <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.placeholderBlur}>
-              <View style={styles.placeholderContent}>
-                <Ionicons name="analytics-outline" size={64} color="#eaff61" />
-                <Text style={styles.placeholderTitle}>Coming Soon</Text>
-                <Text style={styles.placeholderText}>
-                  This page will display your personalized health insights based on your questions and connected data.
-                </Text>
-              </View>
-            </BlurView>
-          </View>
-
+          {/* Action Buttons Section */}
           <View style={styles.buttonSection}>
             <TouchableOpacity
               style={styles.revisitButton}
               activeOpacity={0.85}
               onPress={onOpenOnboarding}
             >
-              <Text style={styles.revisitButtonText}>Update My You-i Profile</Text>
+              <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.revisitButtonBlur}>
+                <View style={styles.revisitButtonContent}>
+                  <Ionicons name="person-circle-outline" size={24} color="#eaff61" />
+                  <Text style={styles.revisitButtonText}>Update You-i Profile</Text>
+                </View>
+              </BlurView>
             </TouchableOpacity>
-            <Text style={styles.revisitHelper}>
-              Reopen the onboarding survey anytime to refresh your You-i Wellness Profile.
-            </Text>
+
+            {/* New Conversation Button */}
+            <TouchableOpacity
+              style={styles.newConversationButton}
+              onPress={handleNewConversation}
+              activeOpacity={0.85}
+            >
+              <View style={styles.newConversationSquare}>
+                <Ionicons name="create-outline" size={24} color="#000" />
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Conversations Section */}
+          <View style={styles.conversationsSection}>
+            <Text style={styles.sectionTitle}>Your Wellness Conversations</Text>
+            
+            {isLoading ? (
+              <View style={styles.loadingState}>
+                <ActivityIndicator size="large" color="#eaff61" />
+              </View>
+            ) : conversations.length === 0 ? (
+              <View style={styles.emptyState}>
+                <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.emptyStateBlur}>
+                  <View style={styles.emptyStateContent}>
+                    <Ionicons name="chatbubbles-outline" size={64} color="rgba(234, 255, 97, 0.5)" />
+                    <Text style={styles.emptyStateTitle}>No Conversations Yet</Text>
+                    <Text style={styles.emptyStateText}>
+                      Start a conversation with You-i to get personalized wellness insights based on your health data.
+                    </Text>
+                  </View>
+                </BlurView>
+              </View>
+            ) : (
+              <View style={styles.conversationsList}>
+                {conversations.map(conversation => renderConversationItem(conversation))}
+              </View>
+            )}
           </View>
         </ScrollView>
       </Background>
+
+      {/* Chat Overlay */}
+      <ChatOverlay
+        visible={showChatOverlay}
+        onClose={handleCloseChatOverlay}
+        conversationId={selectedConversationId}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -76,14 +272,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -92,12 +280,12 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 20,
     zIndex: 20,
+    gap: 8,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#fff',
-    // iOS shadow
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -111,117 +299,193 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 120,
   },
-  titleContainer: {
-    marginBottom: 32,
+  newConversationButton: {
+    marginBottom: 24,
   },
-  titleBlur: {
-    borderRadius: 20,
+  newConversationBlur: {
+    borderRadius: 16,
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(209, 213, 219, 0.2)',
-    // iOS shadow
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 15,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 30,
-    // Android shadow
-    elevation: 15,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    textAlign: 'center',
-    marginBottom: 6,
-    paddingHorizontal: 20,
-    paddingTop: 32,
-    paddingBottom: 10,
-    backgroundColor: 'rgba(229, 231, 235, 0.3)',
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#ffffff',
-    textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 32,
-    backgroundColor: 'rgba(229, 231, 235, 0.3)',
-  },
-  placeholderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 400,
-  },
-  placeholderBlur: {
-    borderRadius: 24,
-    overflow: 'hidden',
-    width: '100%',
-    maxWidth: 400,
     borderWidth: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    // iOS 26 glass UI shadow
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 12,
+      height: 8,
     },
     shadowOpacity: 0.15,
-    shadowRadius: 32,
-    // Android shadow
-    elevation: 12,
+    shadowRadius: 24,
+    elevation: 8,
   },
-  placeholderContent: {
+  newConversationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 0.5,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 48,
-    alignItems: 'center',
-  },
-  placeholderTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  placeholderText: {
-    fontSize: 16,
-    color: '#e5e7eb',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  buttonSection: {
-    marginTop: 32,
-    alignItems: 'center',
     gap: 12,
   },
-  revisitButton: {
-    backgroundColor: '#eaff61',
+  newConversationText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  conversationsSection: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 16,
+    paddingHorizontal: 8,
+  },
+  conversationsList: {
+    gap: 12,
+  },
+  conversationItem: {
+    marginBottom: 3,
+  },
+  conversationBlur: {
     borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  conversationContent: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 16,
+  },
+  conversationHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  conversationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(234, 255, 97, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  conversationInfo: {
+    flex: 1,
+  },
+  conversationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  conversationPreview: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    lineHeight: 18,
+  },
+  loadingState: {
+    marginTop: 60,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
-    maxWidth: 320,
-    borderWidth: 1,
-    borderColor: '#eaff61',
+  },
+  emptyState: {
+    marginTop: 40,
+  },
+  emptyStateBlur: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  emptyStateContent: {
+    padding: 40,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.7)',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  buttonSection: {
+    marginTop: 16,
+    marginBottom: 24,
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  revisitButton: {
+    flex: 1,
+  },
+  revisitButtonBlur: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  revisitButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    gap: 12,
   },
   revisitButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: '#fff',
   },
   revisitHelper: {
-    fontSize: 14,
-    color: '#e5e7eb',
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.6)',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
     paddingHorizontal: 16,
+  },
+  newConversationButton: {
+    width: 56,
+    height: 56,
+  },
+  newConversationSquare: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#eaff61',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
   },
 });

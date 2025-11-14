@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   Image,
   NativeModules,
   Modal,
+  Animated,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -54,6 +55,9 @@ export default function AppsScreen() {
   const [healthData, setHealthData] = useState(null);
   const [lastSyncTime, setLastSyncTime] = useState(null);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  // Animation for modal slide up
+  const slideAnim = useRef(new Animated.Value(1000)).current;
 
   // Check if running in Expo Go (which doesn't support HealthKit)
   const isExpoGo = Constants.appOwnership === 'expo';
@@ -114,6 +118,24 @@ export default function AppsScreen() {
 
     checkAppleHealthConnection();
   }, [isExpoGo]);
+
+  // Animate modal when it opens/closes
+  useEffect(() => {
+    if (showDataModal) {
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 11,
+      }).start();
+    } else {
+      Animated.timing(slideAnim, {
+        toValue: 1000,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showDataModal, slideAnim]);
 
   // Helper functions to replace Zustand store methods
   const connectApp = (appId) => {
@@ -322,12 +344,48 @@ export default function AppsScreen() {
 
     setIsLoading(true);
     try {
+      console.log('[AppsScreen] Fetching health data...');
+      
+      // Check if HealthKit is initialized
+      if (!HealthKitService.isInitialized) {
+        console.log('[AppsScreen] HealthKit not initialized, initializing now...');
+        const initialized = await HealthKitService.requestPermissions();
+        if (!initialized) {
+          throw new Error('HealthKit initialization failed');
+        }
+      }
+      
       const data = await HealthKitService.getHealthData();
+      console.log('[AppsScreen] Health data fetched:', data ? 'success' : 'no data');
+      
+      if (!data || (data.summary && data.summary.totalMetrics === 0)) {
+        Alert.alert(
+          'No Data Available',
+          'No health data found for the last 7 days. Make sure you have data in the Health app and have granted all permissions.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+      
       setHealthData(data);
       setShowDataModal(true);
     } catch (error) {
-      console.error('Error fetching health data:', error);
-      Alert.alert('Error', 'Failed to fetch health data. Please try again.');
+      console.error('[AppsScreen] Error fetching health data:', error);
+      console.error('[AppsScreen] Error details:', {
+        message: error.message,
+        stack: error.stack,
+      });
+      
+      let errorMessage = 'Failed to fetch health data. ';
+      if (error.message.includes('not initialized')) {
+        errorMessage += 'HealthKit is not initialized. Please reconnect Apple Health.';
+      } else if (error.message.includes('permission')) {
+        errorMessage += 'Missing required permissions. Please check Health app settings.';
+      } else {
+        errorMessage += error.message || 'Please try again.';
+      }
+      
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -358,31 +416,31 @@ export default function AppsScreen() {
       <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.appCardBlur}>
         <View style={styles.appCardContent}>
           <View style={styles.appHeader}>
-            <View style={styles.appIconContainer}>
-              {app.icon}
+            <View style={styles.appIconWrapper}>
+              <View style={styles.appIconContainer}>
+                {app.icon}
+              </View>
+              <View style={[
+                styles.statusBadge,
+                { backgroundColor: app.isConnected ? '#10b981' : '#6b7280' }
+              ]}>
+                <Ionicons 
+                  name={app.isConnected ? "checkmark" : "close"} 
+                  size={10} 
+                  color="#ffffff" 
+                />
+              </View>
             </View>
             <View style={styles.appInfo}>
               <Text style={styles.appName}>{app.name}</Text>
-              <Text style={styles.appDescription}>{app.description}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.appActions}>
-            <View style={styles.statusContainer}>
-              <View style={[
-                styles.statusDot,
-                { backgroundColor: app.isConnected ? '#10b981' : '#6b7280' }
-              ]} />
-              <View>
-                <Text style={styles.statusText}>
-                  {app.isConnected ? 'Connected' : 'Not Connected'}
-                </Text>
+              <Text style={styles.appDescription}>
+                {app.description}
                 {app.id === 'appleHealth' && app.isConnected && lastSyncTime && (
-                  <Text style={styles.lastSyncText}>
-                    Last sync: {formatLastSync(lastSyncTime)}
+                  <Text style={styles.lastSyncInline}>
+                    {' • Last sync: ' + formatLastSync(lastSyncTime)}
                   </Text>
                 )}
-              </View>
+              </Text>
             </View>
             
             <View style={styles.buttonContainer}>
@@ -393,7 +451,7 @@ export default function AppsScreen() {
                   disabled={isLoading}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.viewDataButtonText}>View Data</Text>
+                  <Ionicons name="eye-outline" size={20} color="#ffffff" />
                 </TouchableOpacity>
               )}
               <TouchableOpacity
@@ -406,14 +464,13 @@ export default function AppsScreen() {
                 disabled={!app.isAvailable || isLoading}
                 activeOpacity={0.8}
               >
-                <Text style={[
-                  styles.connectButtonText,
-                  app.isConnected && styles.disconnectButtonText,
-                  !app.isAvailable && styles.disabledButtonText
-                ]}>
-                  {isLoading && app.id === 'appleHealth' ? 'Connecting...' : 
-                   app.isConnected ? 'Disconnect' : 'Connect'}
-                </Text>
+                {isLoading && app.id === 'appleHealth' ? (
+                  <Ionicons name="hourglass-outline" size={20} color="#1f2937" />
+                ) : app.isConnected ? (
+                  <Ionicons name="close-circle-outline" size={20} color="#ffffff" />
+                ) : (
+                  <Ionicons name="add-circle-outline" size={20} color="#1f2937" />
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -431,6 +488,7 @@ export default function AppsScreen() {
       <Background style={styles.backgroundImage}>
         {/* Header */}
         <View style={styles.header}>
+          <Ionicons name="apps-outline" size={24} color="#eaff61" />
           <Text style={styles.headerTitle}>Apps</Text>
         </View>
 
@@ -460,56 +518,76 @@ export default function AppsScreen() {
       {/* Health Data Modal */}
       <Modal
         visible={showDataModal}
-        animationType="slide"
+        animationType="fade"
         presentationStyle="pageSheet"
         onRequestClose={() => setShowDataModal(false)}
+        transparent={true}
       >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Apple Health Data</Text>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setShowDataModal(false)}
-            >
-              <Ionicons name="close" size={24} color="#1f2937" />
-            </TouchableOpacity>
-          </View>
-          
-          <ScrollView style={styles.modalContent}>
+        <View style={styles.modalBackdrop}>
+          <Animated.View style={[
+            styles.modalContainer,
+            { transform: [{ translateY: slideAnim }] }
+          ]}>
+            <StatusBar barStyle="light-content" />
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Apple Health Data</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowDataModal(false)}
+              >
+                <Ionicons name="close" size={28} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalContent} contentContainerStyle={styles.modalScrollContent}>
             {healthData ? (
               <View>
                 {/* Summary Section */}
                 {healthData.summary && (
-                  <View style={styles.summaryCard}>
-                    <Text style={styles.summaryTitle}>📊 Data Summary</Text>
-                    <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Total Metrics:</Text>
-                      <Text style={styles.summaryValue}>{healthData.summary.totalMetrics}</Text>
-                    </View>
-                    <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Total Data Points:</Text>
-                      <Text style={styles.summaryValue}>{healthData.summary.totalDataPoints}</Text>
-                    </View>
-                    <View style={styles.summaryRow}>
-                      <Text style={styles.summaryLabel}>Categories:</Text>
-                      <Text style={styles.summaryValue}>{healthData.summary.categories?.join(', ') || 'None'}</Text>
-                    </View>
+                  <View style={styles.summaryCardContainer}>
+                    <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.summaryCard}>
+                      <View style={styles.summaryCardContent}>
+                        <View style={styles.sectionTitleContainer}>
+                          <Ionicons name="stats-chart" size={24} color="#eaff61" />
+                          <Text style={styles.summaryTitle}>Data Summary</Text>
+                        </View>
+                        <View style={styles.summaryRow}>
+                          <Text style={styles.summaryLabel}>Total Metrics:</Text>
+                          <Text style={styles.summaryValue}>{healthData.summary.totalMetrics}</Text>
+                        </View>
+                        <View style={styles.summaryRow}>
+                          <Text style={styles.summaryLabel}>Total Data Points:</Text>
+                          <Text style={styles.summaryValue}>{healthData.summary.totalDataPoints}</Text>
+                        </View>
+                        <View style={styles.summaryRow}>
+                          <Text style={styles.summaryLabel}>Categories:</Text>
+                          <Text style={styles.summaryValue}>{healthData.summary.categories?.join(', ') || 'None'}</Text>
+                        </View>
+                      </View>
+                    </BlurView>
                   </View>
                 )}
 
                 {/* Activity Section */}
                 {healthData.activity && healthData.activity.length > 0 && (
                   <View style={styles.categorySection}>
-                    <Text style={styles.categoryTitle}>🏃 Activity & Fitness</Text>
+                    <View style={styles.categoryTitleContainer}>
+                      <Ionicons name="fitness" size={22} color="#ffffff" />
+                      <Text style={styles.categoryTitle}>Activity & Fitness</Text>
+                    </View>
                     {healthData.activity.map((metric, index) => (
-                      <View key={index} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{metric.label}</Text>
-                        <Text style={styles.metricCount}>{metric.count} data points</Text>
-                        {metric.data && metric.data.length > 0 && (
-                          <Text style={styles.metricLatest}>
-                            Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
-                          </Text>
-                        )}
+                      <View key={index} style={styles.metricCardContainer}>
+                        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.metricCard}>
+                          <View style={styles.metricCardContent}>
+                            <Text style={styles.metricLabel}>{metric.label}</Text>
+                            <Text style={styles.metricCount}>{metric.count} data points</Text>
+                            {metric.data && metric.data.length > 0 && (
+                              <Text style={styles.metricLatest}>
+                                Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
+                              </Text>
+                            )}
+                          </View>
+                        </BlurView>
                       </View>
                     ))}
                   </View>
@@ -518,16 +596,23 @@ export default function AppsScreen() {
                 {/* Heart Section */}
                 {healthData.heart && healthData.heart.length > 0 && (
                   <View style={styles.categorySection}>
-                    <Text style={styles.categoryTitle}>❤️ Heart</Text>
+                    <View style={styles.categoryTitleContainer}>
+                      <Ionicons name="heart" size={22} color="#ffffff" />
+                      <Text style={styles.categoryTitle}>Heart</Text>
+                    </View>
                     {healthData.heart.map((metric, index) => (
-                      <View key={index} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{metric.label}</Text>
-                        <Text style={styles.metricCount}>{metric.count} data points</Text>
-                        {metric.data && metric.data.length > 0 && (
-                          <Text style={styles.metricLatest}>
-                            Latest: {metric.data[0]?.quantity?.toFixed(0) || 'N/A'} {metric.data[0]?.unit || 'bpm'}
-                          </Text>
-                        )}
+                      <View key={index} style={styles.metricCardContainer}>
+                        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.metricCard}>
+                          <View style={styles.metricCardContent}>
+                            <Text style={styles.metricLabel}>{metric.label}</Text>
+                            <Text style={styles.metricCount}>{metric.count} data points</Text>
+                            {metric.data && metric.data.length > 0 && (
+                              <Text style={styles.metricLatest}>
+                                Latest: {metric.data[0]?.quantity?.toFixed(0) || 'N/A'} {metric.data[0]?.unit || 'bpm'}
+                              </Text>
+                            )}
+                          </View>
+                        </BlurView>
                       </View>
                     ))}
                   </View>
@@ -536,16 +621,23 @@ export default function AppsScreen() {
                 {/* Body Section */}
                 {healthData.body && healthData.body.length > 0 && (
                   <View style={styles.categorySection}>
-                    <Text style={styles.categoryTitle}>⚖️ Body Measurements</Text>
+                    <View style={styles.categoryTitleContainer}>
+                      <Ionicons name="body" size={22} color="#ffffff" />
+                      <Text style={styles.categoryTitle}>Body Measurements</Text>
+                    </View>
                     {healthData.body.map((metric, index) => (
-                      <View key={index} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{metric.label}</Text>
-                        <Text style={styles.metricCount}>{metric.count} data points</Text>
-                        {metric.data && metric.data.length > 0 && (
-                          <Text style={styles.metricLatest}>
-                            Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
-                          </Text>
-                        )}
+                      <View key={index} style={styles.metricCardContainer}>
+                        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.metricCard}>
+                          <View style={styles.metricCardContent}>
+                            <Text style={styles.metricLabel}>{metric.label}</Text>
+                            <Text style={styles.metricCount}>{metric.count} data points</Text>
+                            {metric.data && metric.data.length > 0 && (
+                              <Text style={styles.metricLatest}>
+                                Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
+                              </Text>
+                            )}
+                          </View>
+                        </BlurView>
                       </View>
                     ))}
                   </View>
@@ -554,16 +646,23 @@ export default function AppsScreen() {
                 {/* Vitals Section */}
                 {healthData.vitals && healthData.vitals.length > 0 && (
                   <View style={styles.categorySection}>
-                    <Text style={styles.categoryTitle}>🩺 Vitals</Text>
+                    <View style={styles.categoryTitleContainer}>
+                      <Ionicons name="pulse" size={22} color="#ffffff" />
+                      <Text style={styles.categoryTitle}>Vitals</Text>
+                    </View>
                     {healthData.vitals.map((metric, index) => (
-                      <View key={index} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{metric.label}</Text>
-                        <Text style={styles.metricCount}>{metric.count} data points</Text>
-                        {metric.data && metric.data.length > 0 && (
-                          <Text style={styles.metricLatest}>
-                            Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || ''}
-                          </Text>
-                        )}
+                      <View key={index} style={styles.metricCardContainer}>
+                        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.metricCard}>
+                          <View style={styles.metricCardContent}>
+                            <Text style={styles.metricLabel}>{metric.label}</Text>
+                            <Text style={styles.metricCount}>{metric.count} data points</Text>
+                            {metric.data && metric.data.length > 0 && (
+                              <Text style={styles.metricLatest}>
+                                Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || ''}
+                              </Text>
+                            )}
+                          </View>
+                        </BlurView>
                       </View>
                     ))}
                   </View>
@@ -572,16 +671,23 @@ export default function AppsScreen() {
                 {/* Nutrition Section */}
                 {healthData.nutrition && healthData.nutrition.length > 0 && (
                   <View style={styles.categorySection}>
-                    <Text style={styles.categoryTitle}>🍎 Nutrition</Text>
+                    <View style={styles.categoryTitleContainer}>
+                      <Ionicons name="nutrition" size={22} color="#ffffff" />
+                      <Text style={styles.categoryTitle}>Nutrition</Text>
+                    </View>
                     {healthData.nutrition.map((metric, index) => (
-                      <View key={index} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{metric.label}</Text>
-                        <Text style={styles.metricCount}>{metric.count} data points</Text>
-                        {metric.data && metric.data.length > 0 && (
-                          <Text style={styles.metricLatest}>
-                            Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || ''}
-                          </Text>
-                        )}
+                      <View key={index} style={styles.metricCardContainer}>
+                        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.metricCard}>
+                          <View style={styles.metricCardContent}>
+                            <Text style={styles.metricLabel}>{metric.label}</Text>
+                            <Text style={styles.metricCount}>{metric.count} data points</Text>
+                            {metric.data && metric.data.length > 0 && (
+                              <Text style={styles.metricLatest}>
+                                Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || ''}
+                              </Text>
+                            )}
+                          </View>
+                        </BlurView>
                       </View>
                     ))}
                   </View>
@@ -590,11 +696,18 @@ export default function AppsScreen() {
                 {/* Sleep Section */}
                 {healthData.sleep && healthData.sleep.length > 0 && (
                   <View style={styles.categorySection}>
-                    <Text style={styles.categoryTitle}>😴 Sleep & Mindfulness</Text>
+                    <View style={styles.categoryTitleContainer}>
+                      <Ionicons name="moon" size={22} color="#ffffff" />
+                      <Text style={styles.categoryTitle}>Sleep & Mindfulness</Text>
+                    </View>
                     {healthData.sleep.map((metric, index) => (
-                      <View key={index} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{metric.label}</Text>
-                        <Text style={styles.metricCount}>{metric.count} data points</Text>
+                      <View key={index} style={styles.metricCardContainer}>
+                        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.metricCard}>
+                          <View style={styles.metricCardContent}>
+                            <Text style={styles.metricLabel}>{metric.label}</Text>
+                            <Text style={styles.metricCount}>{metric.count} data points</Text>
+                          </View>
+                        </BlurView>
                       </View>
                     ))}
                   </View>
@@ -603,16 +716,23 @@ export default function AppsScreen() {
                 {/* Mobility Section */}
                 {healthData.mobility && healthData.mobility.length > 0 && (
                   <View style={styles.categorySection}>
-                    <Text style={styles.categoryTitle}>🚶 Mobility</Text>
+                    <View style={styles.categoryTitleContainer}>
+                      <Ionicons name="walk" size={22} color="#ffffff" />
+                      <Text style={styles.categoryTitle}>Mobility</Text>
+                    </View>
                     {healthData.mobility.map((metric, index) => (
-                      <View key={index} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{metric.label}</Text>
-                        <Text style={styles.metricCount}>{metric.count} data points</Text>
-                        {metric.data && metric.data.length > 0 && (
-                          <Text style={styles.metricLatest}>
-                            Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
-                          </Text>
-                        )}
+                      <View key={index} style={styles.metricCardContainer}>
+                        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.metricCard}>
+                          <View style={styles.metricCardContent}>
+                            <Text style={styles.metricLabel}>{metric.label}</Text>
+                            <Text style={styles.metricCount}>{metric.count} data points</Text>
+                            {metric.data && metric.data.length > 0 && (
+                              <Text style={styles.metricLatest}>
+                                Latest: {metric.data[0]?.quantity?.toFixed(2) || 'N/A'} {metric.data[0]?.unit || ''}
+                              </Text>
+                            )}
+                          </View>
+                        </BlurView>
                       </View>
                     ))}
                   </View>
@@ -621,16 +741,23 @@ export default function AppsScreen() {
                 {/* Hearing Section */}
                 {healthData.hearing && healthData.hearing.length > 0 && (
                   <View style={styles.categorySection}>
-                    <Text style={styles.categoryTitle}>🎧 Hearing</Text>
+                    <View style={styles.categoryTitleContainer}>
+                      <Ionicons name="headset" size={22} color="#ffffff" />
+                      <Text style={styles.categoryTitle}>Hearing</Text>
+                    </View>
                     {healthData.hearing.map((metric, index) => (
-                      <View key={index} style={styles.metricCard}>
-                        <Text style={styles.metricLabel}>{metric.label}</Text>
-                        <Text style={styles.metricCount}>{metric.count} data points</Text>
-                        {metric.data && metric.data.length > 0 && (
-                          <Text style={styles.metricLatest}>
-                            Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || 'dB'}
-                          </Text>
-                        )}
+                      <View key={index} style={styles.metricCardContainer}>
+                        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.metricCard}>
+                          <View style={styles.metricCardContent}>
+                            <Text style={styles.metricLabel}>{metric.label}</Text>
+                            <Text style={styles.metricCount}>{metric.count} data points</Text>
+                            {metric.data && metric.data.length > 0 && (
+                              <Text style={styles.metricLatest}>
+                                Latest: {metric.data[0]?.quantity?.toFixed(1) || 'N/A'} {metric.data[0]?.unit || 'dB'}
+                              </Text>
+                            )}
+                          </View>
+                        </BlurView>
                       </View>
                     ))}
                   </View>
@@ -657,7 +784,8 @@ export default function AppsScreen() {
             ) : (
               <Text style={styles.noDataText}>No health data available</Text>
             )}
-          </ScrollView>
+            </ScrollView>
+          </Animated.View>
         </View>
       </Modal>
     </KeyboardAvoidingView>
@@ -690,6 +818,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 20,
     zIndex: 20,
+    gap: 8,
   },
   headerTitle: {
     fontSize: 24,
@@ -779,15 +908,17 @@ const styles = StyleSheet.create({
   },
   appHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
+    alignItems: 'flex-start',
+  },
+  appIconWrapper: {
+    position: 'relative',
+    marginRight: 16,
   },
   appIconContainer: {
     width: 52,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
     borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderWidth: 0.5,
@@ -802,6 +933,26 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     // Android shadow
     elevation: 4,
+  },
+  statusBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   appIconImage: {
     width: 44,
@@ -820,49 +971,29 @@ const styles = StyleSheet.create({
   appDescription: {
     fontSize: 14,
     color: '#374151',
-    lineHeight: 18,
+    lineHeight: 20,
   },
-  appActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  statusText: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  lastSyncText: {
-    fontSize: 11,
+  lastSyncInline: {
+    fontSize: 12,
     color: '#6b7280',
-    marginTop: 2,
+    fontStyle: 'italic',
   },
   connectButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 12,
-    minWidth: 100,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 0.5,
     borderColor: 'rgba(255, 255, 255, 0.3)',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   connectButtonActive: {
-    backgroundColor: 'rgba(234, 255, 97, 0.8)',
+    backgroundColor: 'rgba(234, 255, 97, 0.9)',
     borderColor: '#eaff61',
   },
   disconnectButton: {
-    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+    backgroundColor: 'rgba(239, 68, 68, 0.9)',
     borderWidth: 0.5,
     borderColor: '#ef4444',
   },
@@ -904,12 +1035,13 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     gap: 8,
+    marginLeft: 12,
   },
   viewDataButton: {
-    backgroundColor: 'rgba(59, 130, 246, 0.8)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
+    backgroundColor: 'rgba(59, 130, 246, 0.9)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 0.5,
     borderColor: '#3b82f6',
     alignItems: 'center',
@@ -920,36 +1052,57 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ffffff',
   },
-  modalContainer: {
+  modalBackdrop: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    height: '80%',
+    backgroundColor: '#222021',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-    backgroundColor: '#ffffff',
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 4,
   },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#f3f4f6',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalContent: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#222021',
+  },
+  modalScrollContent: {
+    padding: 24,
+    paddingBottom: 100,
   },
   dataSectionTitle: {
     fontSize: 18,
@@ -978,96 +1131,136 @@ const styles = StyleSheet.create({
   },
   noDataText: {
     fontSize: 16,
-    color: '#6b7280',
+    color: '#e5e7eb',
     textAlign: 'center',
     marginTop: 40,
   },
-  summaryCard: {
-    backgroundColor: 'rgba(234, 255, 97, 0.1)',
-    borderRadius: 12,
-    padding: 16,
+  summaryCardContainer: {
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(234, 255, 97, 0.3)',
+  },
+  summaryCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  summaryCardContent: {
+    backgroundColor: 'rgba(50, 50, 48, 0.95)',
+    padding: 20,
+    borderWidth: 0.5,
+    borderColor: 'rgba(234, 255, 97, 0.4)',
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
   },
   summaryTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 12,
+    color: '#eaff61',
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   summaryLabel: {
-    fontSize: 14,
-    color: '#6b7280',
+    fontSize: 15,
+    color: '#d1d5db',
     fontWeight: '500',
   },
   summaryValue: {
-    fontSize: 14,
-    color: '#1f2937',
-    fontWeight: '600',
+    fontSize: 15,
+    color: '#ffffff',
+    fontWeight: '700',
   },
   categorySection: {
-    marginBottom: 24,
+    marginBottom: 28,
+  },
+  categoryTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 14,
+    paddingLeft: 4,
   },
   categoryTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 12,
-  },
-  metricCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(31, 41, 55, 0.1)',
+    color: '#ffffff',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+  },
+  metricCardContainer: {
+    marginBottom: 12,
+  },
+  metricCard: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  metricCardContent: {
+    backgroundColor: 'rgba(50, 50, 48, 0.95)',
+    padding: 16,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   metricLabel: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
+    color: '#ffffff',
+    marginBottom: 6,
   },
   metricCount: {
-    fontSize: 13,
-    color: '#6b7280',
-    marginBottom: 4,
+    fontSize: 14,
+    color: '#9ca3af',
+    marginBottom: 6,
   },
   metricLatest: {
-    fontSize: 14,
-    color: '#059669',
-    fontWeight: '500',
+    fontSize: 15,
+    color: '#10b981',
+    fontWeight: '600',
   },
   timestampContainer: {
-    marginTop: 20,
-    paddingTop: 20,
+    marginTop: 24,
+    paddingTop: 24,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(31, 41, 55, 0.1)',
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
   },
   timestampText: {
-    fontSize: 12,
-    color: '#9ca3af',
+    fontSize: 13,
+    color: '#d1d5db',
     textAlign: 'center',
   },
   noDataContainer: {
     padding: 20,
-    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
   },
 });

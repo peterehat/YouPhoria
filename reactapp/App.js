@@ -9,7 +9,7 @@ import useAppStore from './store/appStore';
 import HealthKitService from './services/healthKitService';
 
 export default function App() {
-  const { isAuthenticated, loading, initialize, needsOnboarding, onboardingChecked, completeOnboarding } = useAuthStore();
+  const { isAuthenticated, loading, initialize, needsOnboarding, onboardingChecked, completeOnboarding, startOnboarding } = useAuthStore();
   const { syncAllData } = useAppStore();
 
   useEffect(() => {
@@ -78,13 +78,21 @@ export default function App() {
     syncAllData();
   };
 
+  const handleOnboardingClose = () => {
+    // If user closes onboarding without completing, just go back to app
+    completeOnboarding();
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
       {!isAuthenticated ? (
         <AuthScreen />
       ) : needsOnboarding ? (
-        <OnboardingScreen onComplete={handleOnboardingComplete} />
+        <OnboardingScreen 
+          onComplete={handleOnboardingComplete}
+          onClose={handleOnboardingClose}
+        />
       ) : (
         <ProtectedApp />
       )}

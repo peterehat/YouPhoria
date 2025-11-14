@@ -8,12 +8,13 @@
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#000000"
     },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.youi.app",
+      "icon": "./assets/icon.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSHealthShareUsageDescription": "You-i needs access to your health data to provide personalized wellness insights and recommendations.",
@@ -44,7 +45,8 @@
         "projectId": "db39b5f3-3867-4850-a19a-3dbb79861037"
       },
       "supabaseUrl": "https://empmaiqjpyhanrpuabou.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtcG1haXFqcHloYW5ycHVhYm91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3MTU1MjAsImV4cCI6MjA3NzI5MTUyMH0.rRZsoyrEfvkNiBkOjBUQPjw38_bhIOBJarrjwusWXmM"
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVtcG1haXFqcHloYW5ycHVhYm91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE3MTU1MjAsImV4cCI6MjA3NzI5MTUyMH0.rRZsoyrEfvkNiBkOjBUQPjw38_bhIOBJarrjwusWXmM",
+      "apiUrl": "http://192.168.7.89:3000/api/v1"
     },
     "scheme": "youi",
     "owner": "peterehat"
