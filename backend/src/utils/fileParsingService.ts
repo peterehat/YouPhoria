@@ -78,6 +78,9 @@ export async function parseFile(
       };
     }
 
+    console.log('[FileParser] Extracted content length:', fileContent?.length || 0, 'characters');
+    console.log('[FileParser] Content preview:', fileContent?.substring(0, 200));
+
     // Use AI to extract structured health data
     const extractedData = isImage
       ? await extractDataFromImage(filePath)
@@ -111,9 +114,24 @@ export async function parseFile(
  * Parse PDF file
  */
 async function parsePDF(filePath: string): Promise<string> {
-  const dataBuffer = fs.readFileSync(filePath);
-  const data = await pdfParse(dataBuffer);
-  return data.text;
+  try {
+    const dataBuffer = fs.readFileSync(filePath);
+    console.log('[FileParser] PDF buffer size:', dataBuffer.length, 'bytes');
+    
+    const data = await pdfParse(dataBuffer);
+    console.log('[FileParser] PDF parsed - pages:', data.numpages, 'text length:', data.text?.length || 0);
+    
+    if (!data.text || data.text.trim().length === 0) {
+      console.warn('[FileParser] PDF text extraction returned empty content');
+      // Return a message indicating the PDF was processed but no text was extracted
+      return '[PDF processed but no text could be extracted. This may be a scanned document that requires OCR.]';
+    }
+    
+    return data.text;
+  } catch (error: any) {
+    console.error('[FileParser] Error parsing PDF:', error);
+    throw new Error(`Failed to parse PDF: ${error.message}`);
+  }
 }
 
 /**
