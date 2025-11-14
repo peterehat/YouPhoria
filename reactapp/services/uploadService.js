@@ -6,26 +6,8 @@
  */
 
 import { supabase } from '../lib/supabase';
-import Constants from 'expo-constants';
 import * as FileSystem from 'expo-file-system';
-
-// Backend API URL - automatically switches between dev and prod
-const getApiUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-  if (Constants.expoConfig?.extra?.apiUrl) {
-    return Constants.expoConfig.extra.apiUrl;
-  }
-  if (__DEV__) {
-    // For simulator, use localhost
-    return 'http://localhost:3000/api/v1';
-  } else {
-    return 'https://you-i-api-production.up.railway.app/api/v1';
-  }
-};
-
-const API_BASE_URL = getApiUrl();
+import { API_BASE_URL } from '../config/api';
 
 /**
  * Get authentication headers with Supabase token

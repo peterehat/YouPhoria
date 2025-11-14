@@ -15,37 +15,20 @@ import {
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
-import Constants from 'expo-constants';
 import Background from './Background';
 import ChatOverlay from './ChatOverlay';
 import { getConversations, deleteConversation } from '../services/chatService';
 import { uploadFile } from '../services/uploadService';
+import { API_BASE_URL, isProduction, isLocalhost } from '../config/api';
 import useAuthStore from '../store/authStore';
 
 export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true); // Start as true to prevent flash
+  const [isUploading, setIsUploading] = useState(false);
   const [showChatOverlay, setShowChatOverlay] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const { user } = useAuthStore();
-  
-  // Get API URL for debug display
-  const getApiUrl = () => {
-    if (process.env.EXPO_PUBLIC_API_URL) {
-      return process.env.EXPO_PUBLIC_API_URL;
-    }
-    if (Constants.expoConfig?.extra?.apiUrl) {
-      return Constants.expoConfig.extra.apiUrl;
-    }
-    if (__DEV__) {
-      return 'http://localhost:3000/api/v1';
-    }
-    return 'https://you-i-api-production.up.railway.app/api/v1';
-  };
-  
-  const apiUrl = getApiUrl();
-  const isProduction = apiUrl.includes('https://');
-  const isLocalhost = apiUrl.includes('localhost');
 
   useEffect(() => {
     if (user?.id) {
@@ -133,8 +116,8 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
         mimeType: file.mimeType,
       });
 
-      // Show loading
-      setIsLoading(true);
+      // Show uploading state
+      setIsUploading(true);
 
       // Upload file
       const uploadResult = await uploadFile(
@@ -144,7 +127,7 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
         user.id
       );
 
-      setIsLoading(false);
+      setIsUploading(false);
 
       if (!uploadResult.success) {
         Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload file');
@@ -160,7 +143,7 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
 
     } catch (error) {
       console.error('[InsightsScreen] Error uploading file:', error);
-      setIsLoading(false);
+      setIsUploading(false);
       Alert.alert('Error', 'Failed to upload file. Please try again.');
     }
   };
@@ -315,9 +298,14 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
               style={styles.uploadButton}
               onPress={handleFileUpload}
               activeOpacity={0.85}
+              disabled={isUploading}
             >
               <View style={styles.uploadSquare}>
-                <Ionicons name="cloud-upload-outline" size={24} color="#000" />
+                {isUploading ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <Ionicons name="cloud-upload-outline" size={24} color="#000" />
+                )}
               </View>
             </TouchableOpacity>
 
@@ -366,7 +354,7 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
                   <View style={styles.apiIndicatorContent}>
                     <View style={[styles.apiDot, isProduction ? styles.apiDotProd : styles.apiDotLocal]} />
                     <Text style={styles.apiText} numberOfLines={1}>
-                      {isProduction ? '🌐 Production' : isLocalhost ? '💻 Local' : '🔧 Dev'}: {apiUrl.replace('/api/v1', '')}
+                      {isProduction ? 'Production' : isLocalhost ? 'Local' : 'Dev'}: {API_BASE_URL.replace('/api/v1', '')}
                     </Text>
                   </View>
                 </BlurView>

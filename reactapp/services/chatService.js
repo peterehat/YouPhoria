@@ -6,48 +6,7 @@
  */
 
 import { supabase } from '../lib/supabase';
-import Constants from 'expo-constants';
-
-// Backend API URL - automatically switches between dev and prod
-// Priority: 1. Environment variable, 2. app.json, 3. Default based on __DEV__
-const getApiUrl = () => {
-  // Check environment variable first (allows override)
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
-  }
-  
-  // Check app.json
-  if (Constants.expoConfig?.extra?.apiUrl) {
-    return Constants.expoConfig.extra.apiUrl;
-  }
-  
-  // Default based on development mode
-  if (__DEV__) {
-    // For simulator, use localhost; for production, use Railway
-    return 'http://localhost:3000/api/v1';
-  } else {
-    // Production: use Railway backend
-    return 'https://you-i-api-production.up.railway.app/api/v1';
-  }
-};
-
-const API_BASE_URL = getApiUrl();
-
-// Log API configuration on module load
-console.log('[ChatService] API Configuration:', {
-  environment: __DEV__ ? 'DEVELOPMENT' : 'PRODUCTION',
-  apiUrl: API_BASE_URL,
-  isLocalhost: API_BASE_URL.includes('localhost'),
-  isLocalIP: API_BASE_URL.match(/192\.168\.|10\.|172\./),
-  isProduction: API_BASE_URL.includes('https://'),
-});
-
-// Warn if using development URL in production build
-if (!__DEV__ && (API_BASE_URL.includes('localhost') || API_BASE_URL.includes('192.168.') || API_BASE_URL.includes('10.') || API_BASE_URL.includes('172.'))) {
-  console.warn('⚠️ [ChatService] WARNING: Production build is configured with a development/local API URL!');
-  console.warn('⚠️ [ChatService] Current API URL:', API_BASE_URL);
-  console.warn('⚠️ [ChatService] Please update app.json extra.apiUrl to your production backend URL');
-}
+import { API_BASE_URL } from '../config/api';
 
 /**
  * Detect network error type and provide user-friendly message
