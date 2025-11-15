@@ -20,6 +20,7 @@ import useAuthStore from '../store/authStore';
 
 export default function DataScreen() {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { user } = useAuthStore();
 
   const handleFileUpload = async () => {
@@ -61,16 +62,24 @@ export default function DataScreen() {
 
       // Show loading
       setIsUploading(true);
+      setUploadProgress(0);
 
-      // Upload file
+      // Upload file with progress tracking
       const uploadResult = await uploadFile(
         file.uri,
         file.name,
         file.mimeType,
-        user.id
+        user.id,
+        (progressData) => {
+          // Update progress state
+          const percent = Math.round(progressData.progress * 100);
+          setUploadProgress(percent);
+          console.log('[DataScreen] Upload progress:', percent + '%');
+        }
       );
 
       setIsUploading(false);
+      setUploadProgress(0);
 
       if (!uploadResult.success) {
         Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload file');
@@ -87,6 +96,7 @@ export default function DataScreen() {
     } catch (error) {
       console.error('[DataScreen] Error uploading file:', error);
       setIsUploading(false);
+      setUploadProgress(0);
       Alert.alert('Error', 'Failed to upload file. Please try again.');
     }
   };
@@ -119,8 +129,8 @@ export default function DataScreen() {
               <View style={styles.uploadButtonContent}>
                 {isUploading ? (
                   <>
-                    <ActivityIndicator size="small" color="#eaff61" />
-                    <Text style={styles.uploadButtonText}>Uploading...</Text>
+                    <Text style={styles.uploadProgressText}>{uploadProgress}%</Text>
+                    <Text style={styles.uploadButtonText}>Upload Health Data</Text>
                   </>
                 ) : (
                   <>
@@ -129,6 +139,11 @@ export default function DataScreen() {
                   </>
                 )}
               </View>
+              {isUploading && (
+                <View style={styles.progressBarContainer}>
+                  <View style={[styles.progressBar, { width: `${uploadProgress}%` }]} />
+                </View>
+              )}
             </BlurView>
           </TouchableOpacity>
 
@@ -310,5 +325,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
+  },
+  uploadTextContainer: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 4,
+  },
+  uploadProgressText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#eaff61',
+    minWidth: 50,
+    textAlign: 'center',
+  },
+  progressBarContainer: {
+    height: 4,
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#eaff61',
+    borderRadius: 2,
   },
 });

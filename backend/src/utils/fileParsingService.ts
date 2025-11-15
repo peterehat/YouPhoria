@@ -3,6 +3,7 @@
  * 
  * Handles parsing of various file types and extracting health-related data using AI.
  * Supports: PDF, images (JPG, PNG), text files, CSV, Excel, Word documents.
+ * This is the main file parsing service for the backend.
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
