@@ -32,7 +32,9 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
     "postinstall": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "kill-port": "lsof -ti :3000 | xargs kill -9 2>/dev/null || echo 'Port 3000 is already free'",
+    "kill-all": "pkill -f nodemon 2>/dev/null; pkill -f 'ts-node.*backend' 2>/dev/null; lsof -ti :3000 | xargs kill -9 2>/dev/null; echo '✅ All nodemon/ts-node processes and port 3000 cleared'"
   },
   "keywords": [],
   "author": "",

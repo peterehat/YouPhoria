@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import AuthScreen from './screens/AuthScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import ProtectedApp from './components/ProtectedApp';
@@ -8,12 +9,26 @@ import useAuthStore from './store/authStore';
 import useAppStore from './store/appStore';
 import HealthKitService from './services/healthKitService';
 
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
+
 export default function App() {
   const { isAuthenticated, loading, initialize, needsOnboarding, onboardingChecked, completeOnboarding, startOnboarding } = useAuthStore();
   const { syncAllData } = useAppStore();
+  const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    initialize();
+    async function prepare() {
+      try {
+        await initialize();
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setAppIsReady(true);
+      }
+    }
+
+    prepare();
   }, []);
 
   useEffect(() => {
@@ -64,13 +79,15 @@ export default function App() {
     }
   };
 
-  if (loading || (isAuthenticated && !onboardingChecked)) {
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar style="light" />
-        <ActivityIndicator size="large" color="#eaff61" />
-      </View>
-    );
+  const onLayoutRootView = useCallback(async () => {
+    if (appIsReady && !loading && onboardingChecked) {
+      // This tells the splash screen to hide immediately
+      await SplashScreen.hideAsync();
+    }
+  }, [appIsReady, loading, onboardingChecked]);
+
+  if (!appIsReady || loading || (isAuthenticated && !onboardingChecked)) {
+    return null;
   }
 
   const handleOnboardingComplete = () => {
@@ -84,7 +101,7 @@ export default function App() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={onLayoutRootView}>
       <StatusBar style="light" />
       {!isAuthenticated ? (
         <AuthScreen />

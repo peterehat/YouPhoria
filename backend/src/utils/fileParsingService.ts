@@ -38,6 +38,7 @@ export interface ParseResult {
 
 /**
  * Main function to parse a file and extract health data
+ * Now uses Gemini AI for ALL file types for consistent, accurate extraction
  */
 export async function parseFile(
   filePath: string,
@@ -47,60 +48,52 @@ export async function parseFile(
   try {
     console.log('[FileParser] Parsing file:', { fileName, mimeType });
 
-    let fileContent: string;
-    let isImage = false;
+    // Determine if file can be sent directly to Gemini or needs preprocessing
+    const canSendDirectly = canSendFileDirectlyToGemini(mimeType);
+    
+    if (canSendDirectly) {
+      // Send file directly to Gemini (PDFs, images)
+      console.log('[FileParser] Sending file directly to Gemini Vision API');
+      const extractedData = await extractDataWithGeminiVision(filePath, mimeType, fileName);
+      
+      if (!extractedData) {
+        return {
+          success: false,
+          error: 'Failed to extract health data from file',
+        };
+      }
 
-    // Extract content based on file type
-    if (mimeType === 'application/pdf') {
-      fileContent = await parsePDF(filePath);
-    } else if (mimeType.startsWith('image/')) {
-      // For images, we'll use Gemini Vision API directly
-      isImage = true;
-      fileContent = ''; // Will be handled separately
-    } else if (mimeType === 'text/plain' || mimeType === 'text/rtf') {
-      fileContent = await parseTextFile(filePath);
-    } else if (mimeType === 'text/csv') {
-      fileContent = await parseCSV(filePath);
-    } else if (
-      mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-      mimeType === 'application/vnd.ms-excel'
-    ) {
-      fileContent = await parseExcel(filePath);
-    } else if (
-      mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      mimeType === 'application/msword'
-    ) {
-      fileContent = await parseWord(filePath);
+      const categories = categorizeData(extractedData);
+      return {
+        success: true,
+        extractedData,
+        dataCategories: categories,
+      };
     } else {
+      // For text-based formats (CSV, Excel, TXT), extract content first then send to Gemini
+      console.log('[FileParser] Extracting content from text-based file');
+      const fileContent = await extractFileContent(filePath, mimeType);
+      
+      console.log('[FileParser] Extracted content length:', fileContent?.length || 0, 'characters');
+      console.log('[FileParser] Content preview:', fileContent?.substring(0, 200));
+
+      // Send extracted content to Gemini for intelligent parsing
+      const extractedData = await extractDataWithGeminiText(fileContent, fileName, mimeType);
+      
+      if (!extractedData) {
+        return {
+          success: false,
+          error: 'Failed to extract health data from file',
+        };
+      }
+
+      const categories = categorizeData(extractedData);
       return {
-        success: false,
-        error: 'Unsupported file type',
+        success: true,
+        extractedData,
+        dataCategories: categories,
       };
     }
-
-    console.log('[FileParser] Extracted content length:', fileContent?.length || 0, 'characters');
-    console.log('[FileParser] Content preview:', fileContent?.substring(0, 200));
-
-    // Use AI to extract structured health data
-    const extractedData = isImage
-      ? await extractDataFromImage(filePath)
-      : await extractDataFromText(fileContent, fileName);
-
-    if (!extractedData) {
-      return {
-        success: false,
-        error: 'Failed to extract health data from file',
-      };
-    }
-
-    // Determine data categories
-    const categories = categorizeData(extractedData);
-
-    return {
-      success: true,
-      extractedData,
-      dataCategories: categories,
-    };
   } catch (error: any) {
     console.error('[FileParser] Error parsing file:', error);
     return {
@@ -111,28 +104,44 @@ export async function parseFile(
 }
 
 /**
- * Parse PDF file
+ * Determine if a file can be sent directly to Gemini Vision API
  */
-async function parsePDF(filePath: string): Promise<string> {
-  try {
-    const dataBuffer = fs.readFileSync(filePath);
-    console.log('[FileParser] PDF buffer size:', dataBuffer.length, 'bytes');
-    
-    const data = await pdfParse(dataBuffer);
-    console.log('[FileParser] PDF parsed - pages:', data.numpages, 'text length:', data.text?.length || 0);
-    
-    if (!data.text || data.text.trim().length === 0) {
-      console.warn('[FileParser] PDF text extraction returned empty content');
-      // Return a message indicating the PDF was processed but no text was extracted
-      return '[PDF processed but no text could be extracted. This may be a scanned document that requires OCR.]';
-    }
-    
-    return data.text;
-  } catch (error: any) {
-    console.error('[FileParser] Error parsing PDF:', error);
-    throw new Error(`Failed to parse PDF: ${error.message}`);
+function canSendFileDirectlyToGemini(mimeType: string): boolean {
+  const directSupportedTypes = [
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/heic',
+    'image/heif',
+  ];
+  
+  return directSupportedTypes.includes(mimeType) || mimeType.startsWith('image/');
+}
+
+/**
+ * Extract content from text-based files (CSV, Excel, TXT, etc.)
+ */
+async function extractFileContent(filePath: string, mimeType: string): Promise<string> {
+  if (mimeType === 'text/plain' || mimeType === 'text/rtf') {
+    return await parseTextFile(filePath);
+  } else if (mimeType === 'text/csv') {
+    return await parseCSV(filePath);
+  } else if (
+    mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+    mimeType === 'application/vnd.ms-excel'
+  ) {
+    return await parseExcel(filePath);
+  } else if (
+    mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    mimeType === 'application/msword'
+  ) {
+    return await parseWord(filePath);
+  } else {
+    throw new Error(`Unsupported file type: ${mimeType}`);
   }
 }
+
 
 /**
  * Parse text file
@@ -199,20 +208,53 @@ async function parseWord(filePath: string): Promise<string> {
 }
 
 /**
- * Extract structured health data from text using AI
+ * Extract structured health data from text content using Gemini AI
+ * Used for CSV, Excel, TXT files after content extraction
  */
-async function extractDataFromText(
+async function extractDataWithGeminiText(
   content: string,
-  fileName: string
+  fileName: string,
+  mimeType: string
 ): Promise<ExtractedData | null> {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = `You are a data extraction AI. Analyze the following document and extract any relevant information that could be useful for health and wellness insights.
+    // Determine file type for better context
+    let fileTypeDescription = 'document';
+    if (mimeType === 'text/csv') {
+      fileTypeDescription = 'CSV spreadsheet';
+    } else if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) {
+      fileTypeDescription = 'Excel spreadsheet';
+    } else if (mimeType === 'text/plain') {
+      fileTypeDescription = 'text file';
+    } else if (mimeType.includes('word')) {
+      fileTypeDescription = 'Word document';
+    }
+
+    const prompt = `You are a health data extraction AI. Analyze this ${fileTypeDescription} and extract ALL health and wellness information.
 
 Document: ${fileName}
+Type: ${fileTypeDescription}
 Content:
-${content.substring(0, 10000)} ${content.length > 10000 ? '...(truncated)' : ''}
+${content.substring(0, 20000)} ${content.length > 20000 ? '...(truncated)' : ''}
+
+This could contain:
+- Lab results and blood test data
+- Nutrition logs (calories, macros, meals)
+- Exercise logs (workouts, steps, distance)
+- Sleep data (duration, quality, stages)
+- Vital signs (heart rate, blood pressure, temperature)
+- Weight and body composition tracking
+- Medication logs
+- Symptom tracking
+- Any other health metrics
+
+IMPORTANT:
+- Extract EVERY piece of health data you find
+- Parse dates carefully and convert to YYYY-MM-DD format
+- For CSV/Excel: understand the column structure and extract all rows
+- Convert all measurements to standard units
+- Be thorough - don't miss any data points
 
 Extract data in the following JSON format (respond with ONLY valid JSON, no markdown):
 {
@@ -231,18 +273,21 @@ Extract data in the following JSON format (respond with ONLY valid JSON, no mark
       "notes": "any relevant notes"
     }
   ],
-  "summary": "Brief summary of the document content in 1-2 sentences",
+  "summary": "Comprehensive summary of ALL data found",
   "confidence": 0.0-1.0
 }
 
 Guidelines:
-- Extract any health-related metrics if present (steps, calories, heart rate, sleep, weight, blood pressure, lab values, etc.)
-- If dates are present, extract them. If not, set dateRange to null.
-- Group related data into entries by date if possible
-- Use standard metric names (e.g., "steps", "calories", "heart_rate_bpm", "weight_kg")
-- Set confidence to at least 0.5 if you can extract any meaningful information from the document
-- Even if no explicit health data is found, extract the main content and set dataType to "other" with confidence 0.3`;
+- Extract ALL health-related metrics (steps, calories, heart rate, sleep, weight, blood pressure, lab values, etc.)
+- Parse dates from any format and convert to YYYY-MM-DD
+- Create separate entries for each date or distinct data point
+- Use standard metric names (e.g., "steps", "calories", "heart_rate_bpm", "weight_lbs", "distance_mi", "water_oz", "glucose_mg_dl")
+- Set confidence to at least 0.8 if you can extract clear health data
+- Set confidence to 0.5-0.7 for partial or unclear data
+- Include row counts and data ranges in the summary`;
 
+    console.log(`[FileParser] Sending ${fileTypeDescription} content to Gemini for extraction`);
+    
     const result = await model.generateContent(prompt);
     const response = result.response.text();
     
@@ -254,7 +299,7 @@ Guidelines:
     
     const extractedData = JSON.parse(cleanedResponse);
     
-    console.log('[FileParser] Extracted data:', {
+    console.log('[FileParser] Extracted data from', fileTypeDescription, ':', {
       dataType: extractedData.dataType,
       entriesCount: extractedData.entries?.length || 0,
       confidence: extractedData.confidence,
@@ -262,37 +307,70 @@ Guidelines:
     
     return extractedData;
   } catch (error: any) {
-    console.error('[FileParser] Error extracting data from text:', error);
+    console.error('[FileParser] Error extracting data with Gemini text:', error);
     return null;
   }
 }
 
 /**
- * Extract structured health data from image using AI Vision
+ * Extract structured health data using Gemini Vision API
+ * Handles PDFs (text-based and scanned) and all image formats with OCR
  */
-async function extractDataFromImage(filePath: string): Promise<ExtractedData | null> {
+async function extractDataWithGeminiVision(
+  filePath: string,
+  mimeType: string,
+  fileName: string
+): Promise<ExtractedData | null> {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    // Read image as base64
-    const imageData = fs.readFileSync(filePath);
-    const base64Image = imageData.toString('base64');
+    // Read file as base64
+    const fileData = fs.readFileSync(filePath);
+    const base64Data = fileData.toString('base64');
     
-    // Determine mime type from file extension
-    const ext = filePath.split('.').pop()?.toLowerCase();
-    const mimeType = ext === 'png' ? 'image/png' : 'image/jpeg';
+    // Determine the actual mime type to send to Gemini
+    let visionMimeType = mimeType;
+    if (mimeType === 'application/pdf') {
+      visionMimeType = 'application/pdf'; // Gemini supports PDF directly
+    } else if (!mimeType.startsWith('image/')) {
+      // For images without proper mime type, determine from extension
+      const ext = filePath.split('.').pop()?.toLowerCase();
+      if (ext === 'png') visionMimeType = 'image/png';
+      else if (ext === 'jpg' || ext === 'jpeg') visionMimeType = 'image/jpeg';
+      else if (ext === 'webp') visionMimeType = 'image/webp';
+      else visionMimeType = 'image/jpeg'; // default
+    }
 
-    const prompt = `You are a data extraction AI. Analyze this image and extract any relevant information that could be useful for health and wellness insights.
+    const fileType = mimeType === 'application/pdf' ? 'PDF document' : 'image';
+    
+    const prompt = `You are a health data extraction AI with advanced OCR capabilities. Analyze this ${fileType} and extract ALL text and health-related information.
+
+Document: ${fileName}
+Type: ${fileType}
 
 This could be:
-- Screenshots of fitness apps
-- Photos of medical reports or lab results
-- Nutrition labels
-- Workout logs
-- Sleep tracking data
-- Vital signs displays
-- Any other health metrics
-- General wellness-related content
+- Lab results and blood test reports (Quest, LabCorp, hospital labs)
+- Screenshots of fitness apps (Apple Health, Fitbit, Strava, MyFitnessPal)
+- Photos of medical reports, prescriptions, or doctor's notes
+- Nutrition labels or food tracking logs
+- Workout logs or exercise tracking data
+- Sleep tracking data (duration, quality, stages)
+- Vital signs displays (blood pressure, temperature, SpO2, heart rate)
+- Wearable device data exports (Garmin, Whoop, Oura)
+- Body composition reports (weight, BMI, body fat %)
+- Medical imaging reports
+- Vaccination records
+- Any other health metrics or wellness information
+
+CRITICAL INSTRUCTIONS: 
+- Use OCR to read ALL visible text, numbers, tables, and data from the ${fileType}
+- Extract EVERY piece of health-related information - be exhaustive
+- Read tables carefully, extracting all rows and columns
+- Parse dates from any format (MM/DD/YYYY, DD-MM-YYYY, etc.) and convert to YYYY-MM-DD
+- Convert measurements to standard units (mg/dL, kg, bpm, etc.)
+- For scanned documents, read carefully as if doing professional OCR
+- Don't miss any metrics, dates, values, or notes
+- If you see ranges (e.g., "120-140"), extract both values
 
 Extract the data in the following JSON format (respond with ONLY valid JSON, no markdown):
 {
@@ -308,31 +386,40 @@ Extract the data in the following JSON format (respond with ONLY valid JSON, no 
       "metrics": {
         "key": "value"
       },
-      "notes": "any relevant notes"
+      "notes": "any relevant notes or text from the document"
     }
   ],
-  "summary": "Brief summary of what's in the image",
+  "summary": "Comprehensive summary of ALL information found in the ${fileType}",
   "confidence": 0.0-1.0
 }
 
 Guidelines:
-- Extract any visible text, numbers, or data from the image
-- Set confidence to at least 0.5 if you can read any text or data
-- Even if no explicit health data is found, describe what's in the image and set dataType to "other" with confidence 0.3`;
+- Extract ALL visible text, numbers, dates, tables, and data
+- Create separate entries for different dates or categories
+- Use standard metric names (e.g., "steps", "calories", "heart_rate_bpm", "weight_lbs", "distance_mi", "water_oz", "glucose_mg_dl", "cholesterol_total_mg_dl")
+- Set confidence to 0.9+ if you can read clear, structured health data
+- Set confidence to 0.7-0.8 for readable but less structured data
+- Set confidence to 0.5-0.6 for partially readable or unclear data
+- Include as much detail as possible in the summary
+- List all metrics found, even if some values are unclear`;
 
+    console.log(`[FileParser] Sending ${fileType} to Gemini Vision API for OCR and extraction`);
+    
     const result = await model.generateContent([
       prompt,
       {
         inlineData: {
-          mimeType,
-          data: base64Image,
+          mimeType: visionMimeType,
+          data: base64Data,
         },
       },
     ]);
     
     const response = result.response.text();
     
-    // Clean up response
+    console.log('[FileParser] Gemini Vision response received, length:', response.length);
+    
+    // Clean up response (remove markdown code blocks if present)
     const cleanedResponse = response
       .replace(/```json\n?/g, '')
       .replace(/```\n?/g, '')
@@ -340,15 +427,17 @@ Guidelines:
     
     const extractedData = JSON.parse(cleanedResponse);
     
-    console.log('[FileParser] Extracted data from image:', {
+    console.log('[FileParser] Extracted data from', fileType, ':', {
       dataType: extractedData.dataType,
       entriesCount: extractedData.entries?.length || 0,
       confidence: extractedData.confidence,
+      summaryLength: extractedData.summary?.length || 0,
     });
     
     return extractedData;
   } catch (error: any) {
-    console.error('[FileParser] Error extracting data from image:', error);
+    console.error('[FileParser] Error extracting data with Gemini Vision:', error);
+    console.error('[FileParser] Error details:', error.message);
     return null;
   }
 }

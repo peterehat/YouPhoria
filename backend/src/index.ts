@@ -125,19 +125,36 @@ const server = app.listen(PORT, () => {
 server.on('error', (error: any) => {
   if (error.code === 'EADDRINUSE') {
     logger.error(`❌ Port ${PORT} is already in use`);
+    logger.error('');
+    logger.error('💡 To fix this, run one of these commands:');
+    logger.error(`   lsof -ti :${PORT} | xargs kill -9`);
+    logger.error(`   or: kill -9 $(lsof -ti :${PORT})`);
+    logger.error('');
+    logger.error('   Or manually find and kill the process:');
+    logger.error(`   lsof -i :${PORT}`);
+    logger.error('');
   } else {
     logger.error('❌ Server error:', error);
   }
   process.exit(1);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
+// Graceful shutdown handlers
+const gracefulShutdown = (signal: string) => {
+  logger.info(`${signal} received, shutting down gracefully`);
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);
   });
-});
+  
+  // Force close after 5 seconds
+  setTimeout(() => {
+    logger.error('Forcing shutdown...');
+    process.exit(1);
+  }, 5000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default app;

@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
   Alert,
+  ActionSheetIOS,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,7 +23,7 @@ export default function HomeScreen({ onNavigate }) {
   const [showChatOverlay, setShowChatOverlay] = useState(false);
   const [initialMessage, setInitialMessage] = useState(null);
   
-  const { user, signOut } = useAuthStore();
+  const { user, signOut, startOnboarding } = useAuthStore();
 
   const handleSendMessage = () => {
     if (healthQuestion.trim()) {
@@ -47,6 +48,48 @@ export default function HomeScreen({ onNavigate }) {
 
   const handleAppsPress = () => {
     onNavigate?.('Apps');
+  };
+
+  const handleAvatarPress = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancel', 'Update You-i Profile', 'Sign Out'],
+          destructiveButtonIndex: 2,
+          cancelButtonIndex: 0,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            // Update You-i Profile
+            startOnboarding();
+          } else if (buttonIndex === 2) {
+            // Sign Out
+            handleLogout();
+          }
+        }
+      );
+    } else {
+      // Android fallback
+      Alert.alert(
+        'Profile Menu',
+        'Choose an action',
+        [
+          {
+            text: 'Update You-i Profile',
+            onPress: () => startOnboarding(),
+          },
+          {
+            text: 'Sign Out',
+            style: 'destructive',
+            onPress: () => handleLogout(),
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+        ]
+      );
+    }
   };
 
   const handleLogout = () => {
@@ -97,7 +140,7 @@ export default function HomeScreen({ onNavigate }) {
 
         {/* User Avatar */}
         <View style={styles.avatarContainer}>
-          <TouchableOpacity onPress={handleLogout} activeOpacity={0.8}>
+          <TouchableOpacity onPress={handleAvatarPress} activeOpacity={0.8}>
             <BlurView intensity={80} tint="dark" style={styles.avatarBlur}>
               <Text style={styles.avatarText}>{getUserInitials()}</Text>
             </BlurView>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
+  Animated,
+  Easing,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,31 +28,67 @@ import useAuthStore from '../store/authStore';
 
 export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
   const [conversations, setConversations] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // Start as true to prevent flash
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial page load
+  const [isRefreshing, setIsRefreshing] = useState(false); // Track pull-to-refresh
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [showChatOverlay, setShowChatOverlay] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [renameConversation, setRenameConversation] = useState(null);
   const [renameText, setRenameText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuthStore();
+  
+  // Animation refs for staggered fade-in
+  const animationRefs = useRef({});
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
     if (user?.id) {
-      loadConversations();
+      loadConversations(false); // false = not a refresh action
     } else {
-      setIsLoading(false); // If no user, stop loading
+      setIsInitialLoad(false); // If no user, stop loading
     }
   }, [user]);
 
-  const loadConversations = async () => {
+  // Trigger staggered fade-in animation when conversations load
+  useEffect(() => {
+    if (conversations.length > 0 && !hasAnimated.current) {
+      hasAnimated.current = true;
+      
+      // Initialize animation values for each conversation
+      conversations.forEach((conversation, index) => {
+        if (!animationRefs.current[conversation.id]) {
+          animationRefs.current[conversation.id] = new Animated.Value(0);
+        }
+        
+        // Stagger the animations with 50ms delay between each, faster duration with ease out
+        Animated.timing(animationRefs.current[conversation.id], {
+          toValue: 1,
+          duration: 150,
+          delay: index * 25,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      });
+    }
+  }, [conversations]);
+
+  const loadConversations = async (isRefreshAction = false) => {
     if (!user?.id) {
       console.log('[InsightsScreen] No user ID available');
       return;
     }
     
     console.log('[InsightsScreen] Loading conversations for user:', user.id);
-    setIsLoading(true);
+    
+    // Only set refresh state if this is a pull-to-refresh action
+    if (isRefreshAction) {
+      setIsRefreshing(true);
+    }
+    // isInitialLoad is already true from initial state, so we don't need to set it
+    
     const result = await getConversations(user.id);
     
     console.log('[InsightsScreen] getConversations result:', result);
@@ -58,6 +96,11 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
     if (result.success) {
       console.log('[InsightsScreen] Setting conversations:', result.conversations.length);
       setConversations(result.conversations);
+      
+      // Reset animation flag when new conversations load
+      if (!isRefreshAction) {
+        hasAnimated.current = false;
+      }
     } else {
       console.error('[InsightsScreen] Failed to load conversations:', result.error);
       
@@ -71,7 +114,8 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
       }
     }
     
-    setIsLoading(false);
+    setIsInitialLoad(false);
+    setIsRefreshing(false);
   };
 
   const handleOpenConversation = (conversationId) => {
@@ -123,16 +167,27 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
 
       // Show uploading state
       setIsUploading(true);
+      setUploadProgress(0);
 
-      // Upload file
+      // Upload file with progress tracking
       const uploadResult = await uploadFile(
         file.uri,
         file.name,
         file.mimeType,
-        user.id
+        user.id,
+        (progressData) => {
+          console.log('[InsightsScreen] Upload progress:', Math.round(progressData.progress * 100) + '%');
+          setUploadProgress(progressData.progress);
+        }
       );
 
+      // Give a brief moment to show 100% completion before hiding
+      if (uploadResult.success) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+
       setIsUploading(false);
+      setUploadProgress(0);
 
       if (!uploadResult.success) {
         Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload file');
@@ -156,8 +211,8 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
   const handleCloseChatOverlay = () => {
     setShowChatOverlay(false);
     setSelectedConversationId(null);
-    // Refresh conversations when chat closes
-    loadConversations();
+    // Refresh conversations when chat closes - this is a refresh action
+    loadConversations(true);
   };
 
   const handleRenameConversation = (conversation) => {
@@ -314,33 +369,60 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
     }
   };
 
-  const renderConversationItem = (conversation) => {
+  const filteredConversations = conversations.filter(conversation => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
     return (
-      <TouchableOpacity
-        key={conversation.id}
-        style={styles.conversationItem}
-        onPress={() => handleOpenConversation(conversation.id)}
-        onLongPress={() => handleLongPress(conversation)}
-        activeOpacity={0.8}
-      >
-        <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.conversationBlur}>
-          <View style={styles.conversationContent}>
-            <View style={styles.conversationHeader}>
-              <View style={styles.conversationIcon}>
-                <Ionicons name="chatbubbles" size={20} color="#eaff61" />
-              </View>
-              <View style={styles.conversationInfo}>
-                <Text style={styles.conversationTitle} numberOfLines={1}>
-                  {conversation.title}
-                </Text>
-                <Text style={styles.conversationPreview} numberOfLines={2}>
-                  {conversation.preview || 'No messages yet'}
-                </Text>
+      conversation.title.toLowerCase().includes(query) ||
+      (conversation.preview && conversation.preview.toLowerCase().includes(query))
+    );
+  });
+
+  const renderConversationItem = (conversation) => {
+    // Get or create animation value for this conversation
+    if (!animationRefs.current[conversation.id]) {
+      animationRefs.current[conversation.id] = new Animated.Value(hasAnimated.current ? 1 : 0);
+    }
+    
+    const animatedStyle = {
+      opacity: animationRefs.current[conversation.id],
+      transform: [
+        {
+          translateY: animationRefs.current[conversation.id].interpolate({
+            inputRange: [0, 1],
+            outputRange: [20, 0],
+          }),
+        },
+      ],
+    };
+    
+    return (
+      <Animated.View key={conversation.id} style={animatedStyle}>
+        <TouchableOpacity
+          style={styles.conversationItem}
+          onPress={() => handleOpenConversation(conversation.id)}
+          onLongPress={() => handleLongPress(conversation)}
+          activeOpacity={0.8}
+        >
+          <BlurView intensity={80} tint="systemUltraThinMaterial" style={styles.conversationBlur}>
+            <View style={styles.conversationContent}>
+              <View style={styles.conversationHeader}>
+                <View style={styles.conversationIcon}>
+                  <Ionicons name="chatbubbles" size={20} color="#eaff61" />
+                </View>
+                <View style={styles.conversationInfo}>
+                  <Text style={styles.conversationTitle} numberOfLines={1}>
+                    {conversation.title}
+                  </Text>
+                  <Text style={styles.conversationPreview} numberOfLines={2}>
+                    {conversation.preview || 'No messages yet'}
+                  </Text>
+                </View>
               </View>
             </View>
-          </View>
-        </BlurView>
-      </TouchableOpacity>
+          </BlurView>
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 
@@ -362,26 +444,35 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
-              refreshing={isLoading}
-              onRefresh={loadConversations}
+              refreshing={isRefreshing}
+              onRefresh={() => loadConversations(true)}
               tintColor="#fff"
             />
           }
         >
           {/* Action Buttons Section */}
           <View style={styles.buttonSection}>
-            <TouchableOpacity
-              style={styles.revisitButton}
-              activeOpacity={0.85}
-              onPress={onOpenOnboarding}
-            >
-              <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.revisitButtonBlur}>
-                <View style={styles.revisitButtonContent}>
-                  <Ionicons name="person-circle-outline" size={24} color="#eaff61" />
-                  <Text style={styles.revisitButtonText}>Update You-i Profile</Text>
+            {/* Search Field */}
+            <View style={styles.searchContainer}>
+              <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.searchBlur}>
+                <View style={styles.searchInputWrapper}>
+                  <Ionicons name="search-outline" size={20} color="rgba(255, 255, 255, 0.7)" />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search conversations..."
+                    placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    returnKeyType="search"
+                  />
+                  {searchQuery.length > 0 && (
+                    <TouchableOpacity onPress={() => setSearchQuery('')} activeOpacity={0.7}>
+                      <Ionicons name="close-circle" size={20} color="rgba(255, 255, 255, 0.7)" />
+                    </TouchableOpacity>
+                  )}
                 </View>
               </BlurView>
-            </TouchableOpacity>
+            </View>
 
             {/* Upload File Button */}
             <TouchableOpacity
@@ -392,7 +483,13 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
             >
               <View style={styles.uploadSquare}>
                 {isUploading ? (
-                  <ActivityIndicator size="small" color="#000" />
+                  <View style={styles.uploadProgressWrapper}>
+                    <View style={styles.uploadProgressCircle}>
+                      <Text style={styles.uploadProgressPercentage}>
+                        {Math.round(uploadProgress * 100)}%
+                      </Text>
+                    </View>
+                  </View>
                 ) : (
                   <Ionicons name="cloud-upload-outline" size={24} color="#000" />
                 )}
@@ -415,7 +512,7 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
           <View style={styles.conversationsSection}>
             <Text style={styles.sectionTitle}>Your Wellness Conversations</Text>
             
-            {isLoading ? (
+            {isInitialLoad ? (
               <View style={styles.loadingState}>
                 <ActivityIndicator size="large" color="#eaff61" />
               </View>
@@ -431,9 +528,21 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
                   </View>
                 </BlurView>
               </View>
+            ) : filteredConversations.length === 0 ? (
+              <View style={styles.emptyState}>
+                <BlurView intensity={100} tint="systemUltraThinMaterial" style={styles.emptyStateBlur}>
+                  <View style={styles.emptyStateContent}>
+                    <Ionicons name="search-outline" size={64} color="rgba(234, 255, 97, 0.5)" />
+                    <Text style={styles.emptyStateTitle}>No Results Found</Text>
+                    <Text style={styles.emptyStateText}>
+                      No conversations match your search query. Try a different search term.
+                    </Text>
+                  </View>
+                </BlurView>
+              </View>
             ) : (
               <View style={styles.conversationsList}>
-                {conversations.map(conversation => renderConversationItem(conversation))}
+                {filteredConversations.map(conversation => renderConversationItem(conversation))}
               </View>
             )}
             
@@ -677,10 +786,10 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: 'center',
   },
-  revisitButton: {
+  searchContainer: {
     flex: 1,
   },
-  revisitButtonBlur: {
+  searchBlur: {
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 0.5,
@@ -694,26 +803,19 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 8,
   },
-  revisitButtonContent: {
+  searchInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    gap: 12,
-  },
-  revisitButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  revisitHelper: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.6)',
-    textAlign: 'center',
-    lineHeight: 18,
     paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#fff',
+    height: 32,
   },
   uploadButton: {
     width: 56,
@@ -734,6 +836,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 24,
     elevation: 8,
+  },
+  uploadProgressWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadProgressCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadProgressPercentage: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#000',
   },
   newConversationButton: {
     width: 56,

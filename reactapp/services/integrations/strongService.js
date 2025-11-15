@@ -147,7 +147,7 @@ export async function importFromCSV(userId, csvData) {
         description: workout.notes || `Strength training with ${exerciseCount} exercises`,
         metrics: {
           exercises: Object.values(workout.exercises),
-          total_volume_kg: totalVolume,
+          total_volume_lbs: totalVolume,
           total_sets: totalSets,
           total_reps: totalReps,
           exercise_count: exerciseCount,
@@ -410,7 +410,7 @@ export async function getWorkoutStats(userId, startDate, endDate) {
     };
     
     events.forEach(event => {
-      stats.totalVolume += event.metrics?.total_volume_kg || 0;
+      stats.totalVolume += event.metrics?.total_volume_lbs || 0;
       stats.totalSets += event.metrics?.total_sets || 0;
       stats.totalReps += event.metrics?.total_reps || 0;
       stats.totalDuration += event.duration_seconds || 0;

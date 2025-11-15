@@ -11,18 +11,18 @@
 export const METRIC_TYPES = {
   // Activity & Fitness
   STEPS: 'steps',
-  DISTANCE: 'distance_m',
-  DISTANCE_WALKING: 'distance_walking_m',
-  DISTANCE_RUNNING: 'distance_running_m',
-  DISTANCE_CYCLING: 'distance_cycling_m',
-  DISTANCE_SWIMMING: 'distance_swimming_m',
+  DISTANCE: 'distance_mi',
+  DISTANCE_WALKING: 'distance_walking_mi',
+  DISTANCE_RUNNING: 'distance_running_mi',
+  DISTANCE_CYCLING: 'distance_cycling_mi',
+  DISTANCE_SWIMMING: 'distance_swimming_mi',
   ACTIVE_CALORIES: 'active_calories_kcal',
   RESTING_CALORIES: 'resting_calories_kcal',
   TOTAL_CALORIES_BURNED: 'total_calories_burned_kcal',
   EXERCISE_MINUTES: 'exercise_minutes',
   ACTIVE_MINUTES: 'active_minutes',
   FLIGHTS_CLIMBED: 'flights_climbed',
-  ELEVATION_GAIN: 'elevation_gain_m',
+  ELEVATION_GAIN: 'elevation_gain_ft',
   
   // Heart & Cardiovascular
   HEART_RATE: 'heart_rate_bpm',
@@ -34,12 +34,12 @@ export const METRIC_TYPES = {
   BLOOD_PRESSURE_DIASTOLIC: 'blood_pressure_diastolic_mmhg',
   
   // Body Measurements
-  WEIGHT: 'weight_kg',
-  HEIGHT: 'height_cm',
+  WEIGHT: 'weight_lbs',
+  HEIGHT: 'height_in',
   BMI: 'bmi',
   BODY_FAT_PERCENTAGE: 'body_fat_percentage',
-  LEAN_BODY_MASS: 'lean_body_mass_kg',
-  WAIST_CIRCUMFERENCE: 'waist_circumference_cm',
+  LEAN_BODY_MASS: 'lean_body_mass_lbs',
+  WAIST_CIRCUMFERENCE: 'waist_circumference_in',
   
   // Sleep
   SLEEP_DURATION: 'sleep_duration_hours',
@@ -52,7 +52,7 @@ export const METRIC_TYPES = {
   BLOOD_GLUCOSE: 'blood_glucose_mg_dl',
   OXYGEN_SATURATION: 'oxygen_saturation_percentage',
   RESPIRATORY_RATE: 'respiratory_rate_bpm',
-  BODY_TEMPERATURE: 'body_temperature_celsius',
+  BODY_TEMPERATURE: 'body_temperature_fahrenheit',
   
   // Nutrition
   CALORIES_CONSUMED: 'calories_consumed_kcal',
@@ -62,15 +62,15 @@ export const METRIC_TYPES = {
   FIBER: 'fiber_g',
   SUGAR: 'sugar_g',
   SODIUM: 'sodium_mg',
-  WATER: 'water_ml',
+  WATER: 'water_oz',
   CAFFEINE: 'caffeine_mg',
   
   // Strength Training
-  WEIGHT_LIFTED: 'weight_lifted_kg',
+  WEIGHT_LIFTED: 'weight_lifted_lbs',
   REPS: 'reps',
   SETS: 'sets',
-  TRAINING_VOLUME: 'training_volume_kg', // sets × reps × weight
-  ONE_REP_MAX: 'one_rep_max_kg',
+  TRAINING_VOLUME: 'training_volume_lbs', // sets × reps × weight
+  ONE_REP_MAX: 'one_rep_max_lbs',
   
   // Other
   MINDFUL_MINUTES: 'mindful_minutes',
@@ -91,18 +91,18 @@ export const DATA_CATEGORIES = {
 // Metric metadata including category and default quality score
 export const METRIC_METADATA = {
   [METRIC_TYPES.STEPS]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'steps', displayName: 'Steps' },
-  [METRIC_TYPES.DISTANCE]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'm', displayName: 'Distance' },
-  [METRIC_TYPES.DISTANCE_WALKING]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'm', displayName: 'Walking Distance' },
-  [METRIC_TYPES.DISTANCE_RUNNING]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'm', displayName: 'Running Distance' },
-  [METRIC_TYPES.DISTANCE_CYCLING]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'm', displayName: 'Cycling Distance' },
-  [METRIC_TYPES.DISTANCE_SWIMMING]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'm', displayName: 'Swimming Distance' },
+  [METRIC_TYPES.DISTANCE]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'mi', displayName: 'Distance' },
+  [METRIC_TYPES.DISTANCE_WALKING]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'mi', displayName: 'Walking Distance' },
+  [METRIC_TYPES.DISTANCE_RUNNING]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'mi', displayName: 'Running Distance' },
+  [METRIC_TYPES.DISTANCE_CYCLING]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'mi', displayName: 'Cycling Distance' },
+  [METRIC_TYPES.DISTANCE_SWIMMING]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'mi', displayName: 'Swimming Distance' },
   [METRIC_TYPES.ACTIVE_CALORIES]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'kcal', displayName: 'Active Calories' },
   [METRIC_TYPES.RESTING_CALORIES]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'kcal', displayName: 'Resting Calories' },
   [METRIC_TYPES.TOTAL_CALORIES_BURNED]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'kcal', displayName: 'Total Calories Burned' },
   [METRIC_TYPES.EXERCISE_MINUTES]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'min', displayName: 'Exercise Minutes' },
   [METRIC_TYPES.ACTIVE_MINUTES]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'min', displayName: 'Active Minutes' },
   [METRIC_TYPES.FLIGHTS_CLIMBED]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'flights', displayName: 'Flights Climbed' },
-  [METRIC_TYPES.ELEVATION_GAIN]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'm', displayName: 'Elevation Gain' },
+  [METRIC_TYPES.ELEVATION_GAIN]: { category: DATA_CATEGORIES.ACTIVITY, unit: 'ft', displayName: 'Elevation Gain' },
   
   [METRIC_TYPES.HEART_RATE]: { category: DATA_CATEGORIES.VITALS, unit: 'bpm', displayName: 'Heart Rate' },
   [METRIC_TYPES.RESTING_HEART_RATE]: { category: DATA_CATEGORIES.VITALS, unit: 'bpm', displayName: 'Resting Heart Rate' },
@@ -112,12 +112,12 @@ export const METRIC_METADATA = {
   [METRIC_TYPES.BLOOD_PRESSURE_SYSTOLIC]: { category: DATA_CATEGORIES.VITALS, unit: 'mmHg', displayName: 'Blood Pressure (Systolic)' },
   [METRIC_TYPES.BLOOD_PRESSURE_DIASTOLIC]: { category: DATA_CATEGORIES.VITALS, unit: 'mmHg', displayName: 'Blood Pressure (Diastolic)' },
   
-  [METRIC_TYPES.WEIGHT]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'kg', displayName: 'Weight' },
-  [METRIC_TYPES.HEIGHT]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'cm', displayName: 'Height' },
-  [METRIC_TYPES.BMI]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'kg/m²', displayName: 'BMI' },
+  [METRIC_TYPES.WEIGHT]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'lbs', displayName: 'Weight' },
+  [METRIC_TYPES.HEIGHT]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'in', displayName: 'Height' },
+  [METRIC_TYPES.BMI]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'lbs/in²', displayName: 'BMI' },
   [METRIC_TYPES.BODY_FAT_PERCENTAGE]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: '%', displayName: 'Body Fat %' },
-  [METRIC_TYPES.LEAN_BODY_MASS]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'kg', displayName: 'Lean Body Mass' },
-  [METRIC_TYPES.WAIST_CIRCUMFERENCE]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'cm', displayName: 'Waist Circumference' },
+  [METRIC_TYPES.LEAN_BODY_MASS]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'lbs', displayName: 'Lean Body Mass' },
+  [METRIC_TYPES.WAIST_CIRCUMFERENCE]: { category: DATA_CATEGORIES.BODY_MEASUREMENT, unit: 'in', displayName: 'Waist Circumference' },
   
   [METRIC_TYPES.SLEEP_DURATION]: { category: DATA_CATEGORIES.SLEEP, unit: 'hours', displayName: 'Sleep Duration' },
   [METRIC_TYPES.SLEEP_DEEP]: { category: DATA_CATEGORIES.SLEEP, unit: 'hours', displayName: 'Deep Sleep' },
@@ -128,7 +128,7 @@ export const METRIC_METADATA = {
   [METRIC_TYPES.BLOOD_GLUCOSE]: { category: DATA_CATEGORIES.VITALS, unit: 'mg/dL', displayName: 'Blood Glucose' },
   [METRIC_TYPES.OXYGEN_SATURATION]: { category: DATA_CATEGORIES.VITALS, unit: '%', displayName: 'Oxygen Saturation' },
   [METRIC_TYPES.RESPIRATORY_RATE]: { category: DATA_CATEGORIES.VITALS, unit: 'bpm', displayName: 'Respiratory Rate' },
-  [METRIC_TYPES.BODY_TEMPERATURE]: { category: DATA_CATEGORIES.VITALS, unit: '°C', displayName: 'Body Temperature' },
+  [METRIC_TYPES.BODY_TEMPERATURE]: { category: DATA_CATEGORIES.VITALS, unit: '°F', displayName: 'Body Temperature' },
   
   [METRIC_TYPES.CALORIES_CONSUMED]: { category: DATA_CATEGORIES.NUTRITION, unit: 'kcal', displayName: 'Calories' },
   [METRIC_TYPES.PROTEIN]: { category: DATA_CATEGORIES.NUTRITION, unit: 'g', displayName: 'Protein' },
@@ -137,14 +137,14 @@ export const METRIC_METADATA = {
   [METRIC_TYPES.FIBER]: { category: DATA_CATEGORIES.NUTRITION, unit: 'g', displayName: 'Fiber' },
   [METRIC_TYPES.SUGAR]: { category: DATA_CATEGORIES.NUTRITION, unit: 'g', displayName: 'Sugar' },
   [METRIC_TYPES.SODIUM]: { category: DATA_CATEGORIES.NUTRITION, unit: 'mg', displayName: 'Sodium' },
-  [METRIC_TYPES.WATER]: { category: DATA_CATEGORIES.NUTRITION, unit: 'ml', displayName: 'Water' },
+  [METRIC_TYPES.WATER]: { category: DATA_CATEGORIES.NUTRITION, unit: 'oz', displayName: 'Water' },
   [METRIC_TYPES.CAFFEINE]: { category: DATA_CATEGORIES.NUTRITION, unit: 'mg', displayName: 'Caffeine' },
   
-  [METRIC_TYPES.WEIGHT_LIFTED]: { category: DATA_CATEGORIES.WORKOUT, unit: 'kg', displayName: 'Weight Lifted' },
+  [METRIC_TYPES.WEIGHT_LIFTED]: { category: DATA_CATEGORIES.WORKOUT, unit: 'lbs', displayName: 'Weight Lifted' },
   [METRIC_TYPES.REPS]: { category: DATA_CATEGORIES.WORKOUT, unit: 'reps', displayName: 'Reps' },
   [METRIC_TYPES.SETS]: { category: DATA_CATEGORIES.WORKOUT, unit: 'sets', displayName: 'Sets' },
-  [METRIC_TYPES.TRAINING_VOLUME]: { category: DATA_CATEGORIES.WORKOUT, unit: 'kg', displayName: 'Training Volume' },
-  [METRIC_TYPES.ONE_REP_MAX]: { category: DATA_CATEGORIES.WORKOUT, unit: 'kg', displayName: '1RM' },
+  [METRIC_TYPES.TRAINING_VOLUME]: { category: DATA_CATEGORIES.WORKOUT, unit: 'lbs', displayName: 'Training Volume' },
+  [METRIC_TYPES.ONE_REP_MAX]: { category: DATA_CATEGORIES.WORKOUT, unit: 'lbs', displayName: '1RM' },
   
   [METRIC_TYPES.MINDFUL_MINUTES]: { category: DATA_CATEGORIES.MENTAL_HEALTH, unit: 'min', displayName: 'Mindful Minutes' },
   [METRIC_TYPES.STRESS_LEVEL]: { category: DATA_CATEGORIES.MENTAL_HEALTH, unit: 'level', displayName: 'Stress Level' },
@@ -153,36 +153,36 @@ export const METRIC_METADATA = {
 // Unit conversion functions
 export const UNIT_CONVERSIONS = {
   // Distance
-  miles_to_meters: (miles) => miles * 1609.34,
-  meters_to_miles: (meters) => meters / 1609.34,
-  km_to_meters: (km) => km * 1000,
-  meters_to_km: (meters) => meters / 1000,
-  feet_to_meters: (feet) => feet * 0.3048,
-  meters_to_feet: (meters) => meters / 0.3048,
+  km_to_miles: (km) => km * 0.621371,
+  miles_to_km: (miles) => miles / 0.621371,
+  meters_to_miles: (meters) => meters * 0.000621371,
+  miles_to_meters: (miles) => miles / 0.000621371,
+  meters_to_feet: (meters) => meters * 3.28084,
+  feet_to_meters: (feet) => feet / 3.28084,
   
   // Weight
-  lbs_to_kg: (lbs) => lbs * 0.453592,
-  kg_to_lbs: (kg) => kg / 0.453592,
-  oz_to_g: (oz) => oz * 28.3495,
-  g_to_oz: (g) => g / 28.3495,
+  kg_to_lbs: (kg) => kg * 2.20462,
+  lbs_to_kg: (lbs) => lbs / 2.20462,
+  g_to_oz: (g) => g * 0.035274,
+  oz_to_g: (oz) => oz / 0.035274,
   
   // Height
-  inches_to_cm: (inches) => inches * 2.54,
-  cm_to_inches: (cm) => cm / 2.54,
-  feet_to_cm: (feet) => feet * 30.48,
-  cm_to_feet: (cm) => cm / 30.48,
+  cm_to_inches: (cm) => cm * 0.393701,
+  inches_to_cm: (inches) => inches / 0.393701,
+  cm_to_feet: (cm) => cm * 0.0328084,
+  feet_to_cm: (feet) => feet / 0.0328084,
   
   // Temperature
-  fahrenheit_to_celsius: (f) => (f - 32) * 5/9,
   celsius_to_fahrenheit: (c) => (c * 9/5) + 32,
+  fahrenheit_to_celsius: (f) => (f - 32) * 5/9,
   
   // Volume
-  fl_oz_to_ml: (oz) => oz * 29.5735,
-  ml_to_fl_oz: (ml) => ml / 29.5735,
-  cups_to_ml: (cups) => cups * 236.588,
-  ml_to_cups: (ml) => ml / 236.588,
-  liters_to_ml: (liters) => liters * 1000,
+  ml_to_fl_oz: (ml) => ml * 0.033814,
+  fl_oz_to_ml: (oz) => oz / 0.033814,
+  ml_to_cups: (ml) => ml * 0.00422675,
+  cups_to_ml: (cups) => cups / 0.00422675,
   ml_to_liters: (ml) => ml / 1000,
+  liters_to_ml: (liters) => liters * 1000,
   
   // Time
   seconds_to_minutes: (seconds) => seconds / 60,
@@ -334,46 +334,46 @@ export function convertToStandardUnit(value, fromUnit, toUnit) {
   }
   
   // Distance conversions
-  if (fromUnit === 'miles' && toUnit === 'm') {
-    return UNIT_CONVERSIONS.miles_to_meters(value);
+  if (fromUnit === 'km' && toUnit === 'mi') {
+    return UNIT_CONVERSIONS.km_to_miles(value);
   }
-  if (fromUnit === 'km' && toUnit === 'm') {
-    return UNIT_CONVERSIONS.km_to_meters(value);
+  if (fromUnit === 'meters' && toUnit === 'mi') {
+    return UNIT_CONVERSIONS.meters_to_miles(value);
   }
-  if (fromUnit === 'feet' && toUnit === 'm') {
-    return UNIT_CONVERSIONS.feet_to_meters(value);
+  if (fromUnit === 'meters' && toUnit === 'ft') {
+    return UNIT_CONVERSIONS.meters_to_feet(value);
   }
   
   // Weight conversions
-  if (fromUnit === 'lbs' && toUnit === 'kg') {
-    return UNIT_CONVERSIONS.lbs_to_kg(value);
+  if (fromUnit === 'kg' && toUnit === 'lbs') {
+    return UNIT_CONVERSIONS.kg_to_lbs(value);
   }
-  if (fromUnit === 'oz' && toUnit === 'g') {
-    return UNIT_CONVERSIONS.oz_to_g(value);
+  if (fromUnit === 'g' && toUnit === 'oz') {
+    return UNIT_CONVERSIONS.g_to_oz(value);
   }
   
   // Height conversions
-  if (fromUnit === 'inches' && toUnit === 'cm') {
-    return UNIT_CONVERSIONS.inches_to_cm(value);
+  if (fromUnit === 'cm' && toUnit === 'inches') {
+    return UNIT_CONVERSIONS.cm_to_inches(value);
   }
-  if (fromUnit === 'feet' && toUnit === 'cm') {
-    return UNIT_CONVERSIONS.feet_to_cm(value);
+  if (fromUnit === 'cm' && toUnit === 'feet') {
+    return UNIT_CONVERSIONS.cm_to_feet(value);
   }
   
   // Temperature conversions
-  if (fromUnit === 'fahrenheit' && toUnit === 'celsius') {
-    return UNIT_CONVERSIONS.fahrenheit_to_celsius(value);
+  if (fromUnit === 'celsius' && toUnit === 'fahrenheit') {
+    return UNIT_CONVERSIONS.celsius_to_fahrenheit(value);
   }
   
   // Volume conversions
-  if (fromUnit === 'fl_oz' && toUnit === 'ml') {
-    return UNIT_CONVERSIONS.fl_oz_to_ml(value);
+  if (fromUnit === 'ml' && toUnit === 'fl_oz') {
+    return UNIT_CONVERSIONS.ml_to_fl_oz(value);
   }
-  if (fromUnit === 'cups' && toUnit === 'ml') {
-    return UNIT_CONVERSIONS.cups_to_ml(value);
+  if (fromUnit === 'ml' && toUnit === 'cups') {
+    return UNIT_CONVERSIONS.ml_to_cups(value);
   }
-  if (fromUnit === 'liters' && toUnit === 'ml') {
-    return UNIT_CONVERSIONS.liters_to_ml(value);
+  if (fromUnit === 'ml' && toUnit === 'liters') {
+    return UNIT_CONVERSIONS.ml_to_liters(value);
   }
   
   // Time conversions

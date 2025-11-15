@@ -36,6 +36,7 @@ export default function ChatOverlay({
   const [streamingText, setStreamingText] = useState('');
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const scrollViewRef = useRef(null);
   const slideAnim = useRef(new Animated.Value(1000)).current;
   const streamingIntervalRef = useRef(null);
@@ -364,10 +365,12 @@ export default function ChatOverlay({
 
       // Show uploading message
       setIsUploading(true);
+      setUploadProgress(0);
       const uploadingMessage = {
         id: Date.now().toString(),
         role: 'system',
         content: `Uploading ${file.name}...`,
+        isUploading: true,
         created_at: new Date().toISOString(),
       };
       setMessages(prev => [...prev, uploadingMessage]);
@@ -377,17 +380,35 @@ export default function ChatOverlay({
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
 
-      // Upload file
+      // Upload file with progress tracking
       const uploadResult = await uploadFile(
         file.uri,
         file.name,
         file.mimeType,
-        user.id
+        user.id,
+        (progressData) => {
+          // Update progress (0-1)
+          console.log('[ChatOverlay] Upload progress:', Math.round(progressData.progress * 100) + '%');
+          setUploadProgress(progressData.progress);
+          
+          // Update message with progress
+          setMessages(prev => prev.map(m => 
+            m.id === uploadingMessage.id 
+              ? { ...m, content: `Uploading ${file.name}... ${Math.round(progressData.progress * 100)}%` }
+              : m
+          ));
+        }
       );
+
+      // Give a brief moment to show 100% completion before hiding
+      if (uploadResult.success) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
 
       // Remove uploading message
       setMessages(prev => prev.filter(m => m.id !== uploadingMessage.id));
       setIsUploading(false);
+      setUploadProgress(0);
 
       if (!uploadResult.success) {
         Alert.alert('Upload Failed', uploadResult.error || 'Failed to upload file');
@@ -436,6 +457,7 @@ export default function ChatOverlay({
   const renderMessage = (message, index) => {
     const isUser = message.role === 'user';
     const isStreaming = streamingMessageId === message.id;
+    const isUploadingMessage = message.isUploading && isUploading;
     
     if (isUser) {
       // User messages with bubble
@@ -453,6 +475,31 @@ export default function ChatOverlay({
               {message.content}
             </Text>
           </BlurView>
+        </View>
+      );
+    } else if (isUploadingMessage) {
+      // Upload progress message
+      return (
+        <View
+          key={message.id || index}
+          style={[styles.messageContainer, styles.aiMessageContainer]}
+        >
+          <View style={styles.uploadProgressContainer}>
+            <View style={styles.uploadProgressHeader}>
+              <Ionicons name="cloud-upload-outline" size={20} color="#9ca3af" />
+              <Text style={styles.uploadProgressText}>{message.content}</Text>
+            </View>
+            <View style={styles.progressBarContainer}>
+              <View style={styles.progressBarBackground}>
+                <View 
+                  style={[
+                    styles.progressBarFill,
+                    { width: `${uploadProgress * 100}%` }
+                  ]} 
+                />
+              </View>
+            </View>
+          </View>
         </View>
       );
     } else {
@@ -776,6 +823,39 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#eaff61',
     opacity: 0.8,
+  },
+  uploadProgressContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  uploadProgressHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  uploadProgressText: {
+    color: '#9ca3af',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  progressBarContainer: {
+    width: '100%',
+  },
+  progressBarBackground: {
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#eaff61',
+    borderRadius: 3,
   },
   markdownContainer: {
     flexDirection: 'row',

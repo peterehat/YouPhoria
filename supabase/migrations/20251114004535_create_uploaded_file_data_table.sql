@@ -30,19 +30,23 @@ CREATE TABLE IF NOT EXISTS public.uploaded_file_data (
 -- Enable Row Level Security
 ALTER TABLE public.uploaded_file_data ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- RLS Policies (drop if exists, then create)
+DROP POLICY IF EXISTS "Users can view own uploaded file data" ON public.uploaded_file_data;
 CREATE POLICY "Users can view own uploaded file data"
   ON public.uploaded_file_data FOR SELECT
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own uploaded file data" ON public.uploaded_file_data;
 CREATE POLICY "Users can insert own uploaded file data"
   ON public.uploaded_file_data FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own uploaded file data" ON public.uploaded_file_data;
 CREATE POLICY "Users can update own uploaded file data"
   ON public.uploaded_file_data FOR UPDATE
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own uploaded file data" ON public.uploaded_file_data;
 CREATE POLICY "Users can delete own uploaded file data"
   ON public.uploaded_file_data FOR DELETE
   USING (auth.uid() = user_id);
@@ -61,6 +65,7 @@ CREATE INDEX IF NOT EXISTS idx_uploaded_file_data_categories
   ON public.uploaded_file_data USING GIN(data_categories);
 
 -- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_uploaded_file_data_updated_at ON public.uploaded_file_data;
 CREATE TRIGGER update_uploaded_file_data_updated_at
   BEFORE UPDATE ON public.uploaded_file_data
   FOR EACH ROW

@@ -1041,7 +1041,7 @@ class HealthKitService {
       const metrics = {
         date: date.toISOString().split('T')[0], // YYYY-MM-DD format
         steps: Math.round(sumQuantities(steps) || 0),
-        distance_km: (sumQuantities(distance) / 1000) || null, // Convert meters to km
+        distance_mi: (sumQuantities(distance) / 1609.34) || null, // Convert meters to miles
         active_calories: Math.round(sumQuantities(activeCalories) || 0),
         resting_calories: Math.round(sumQuantities(restingCalories) || 0),
         exercise_minutes: Math.round((sumQuantities(exerciseTime) || 0) / 60), // Convert seconds to minutes
@@ -1050,7 +1050,7 @@ class HealthKitService {
         resting_heart_rate: getLatest(restingHeartRate),
         heart_rate_variability: getLatest(hrv),
         sleep_hours: calculateSleepHours(sleep),
-        weight_kg: getLatest(weight),
+        weight_lbs: getLatest(weight) ? getLatest(weight) * 2.20462 : null, // Convert kg to lbs
       };
 
       if (DEBUG_HEALTHKIT) {

@@ -10,7 +10,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 export interface DailyMetric {
   date: string;
   steps?: number;
-  distance_km?: number;
+  distance_mi?: number;
   active_calories?: number;
   resting_calories?: number;
   exercise_minutes?: number;
@@ -19,12 +19,12 @@ export interface DailyMetric {
   resting_heart_rate?: number;
   heart_rate_variability?: number;
   sleep_hours?: number;
-  weight_kg?: number;
+  weight_lbs?: number;
   protein_g?: number;
   carbs_g?: number;
   fat_g?: number;
   calories_consumed?: number;
-  water_ml?: number;
+  water_oz?: number;
   workout_count?: number;
   total_workout_minutes?: number;
   strength_sessions?: number;
@@ -199,9 +199,9 @@ export async function getDataSummary(
     if (metrics.length > 0) {
       // Calculate averages
       const avgFields = [
-        'steps', 'distance_km', 'active_calories', 'exercise_minutes',
+        'steps', 'distance_mi', 'active_calories', 'exercise_minutes',
         'avg_heart_rate', 'resting_heart_rate', 'heart_rate_variability',
-        'sleep_hours', 'calories_consumed', 'protein_g', 'carbs_g', 'fat_g', 'water_ml'
+        'sleep_hours', 'calories_consumed', 'protein_g', 'carbs_g', 'fat_g', 'water_oz'
       ];
 
       avgFields.forEach(field => {
@@ -217,7 +217,7 @@ export async function getDataSummary(
 
       // Calculate totals
       const totalFields = [
-        'steps', 'distance_km', 'active_calories', 'exercise_minutes',
+        'steps', 'distance_mi', 'active_calories', 'exercise_minutes',
         'workout_count', 'strength_sessions', 'cardio_sessions'
       ];
 
@@ -232,9 +232,9 @@ export async function getDataSummary(
       });
 
       // Get latest weight
-      const latestWithWeight = metrics.reverse().find(m => m.weight_kg != null);
+      const latestWithWeight = metrics.reverse().find(m => m.weight_lbs != null);
       if (latestWithWeight) {
-        summary.latestWeight = latestWithWeight.weight_kg;
+        summary.latestWeight = latestWithWeight.weight_lbs;
       }
     }
 
@@ -301,7 +301,7 @@ export function formatDailyMetricsForContext(metrics: DailyMetric[]): string {
 
     // Activity
     if (day.steps) text += `  Steps: ${day.steps.toLocaleString()}\n`;
-    if (day.distance_km) text += `  Distance: ${day.distance_km.toFixed(2)} km\n`;
+    if (day.distance_mi) text += `  Distance: ${day.distance_mi.toFixed(2)} miles\n`;
     if (day.active_calories) text += `  Active Calories: ${day.active_calories} kcal\n`;
     if (day.exercise_minutes) text += `  Exercise: ${day.exercise_minutes} minutes\n`;
 
@@ -318,14 +318,14 @@ export function formatDailyMetricsForContext(metrics: DailyMetric[]): string {
     if (day.protein_g) text += `  Protein: ${day.protein_g}g\n`;
     if (day.carbs_g) text += `  Carbs: ${day.carbs_g}g\n`;
     if (day.fat_g) text += `  Fat: ${day.fat_g}g\n`;
+    if (day.water_oz) text += `  Water: ${day.water_oz.toFixed(1)} oz\n`;
 
     // Workouts
     if (day.workout_count) text += `  Workouts: ${day.workout_count}\n`;
 
-    // Weight (convert to lbs for US users)
-    if (day.weight_kg) {
-      const weightLbs = day.weight_kg * 2.20462;
-      text += `  Weight: ${weightLbs.toFixed(1)} lbs (${day.weight_kg.toFixed(1)} kg)\n`;
+    // Weight
+    if (day.weight_lbs) {
+      text += `  Weight: ${day.weight_lbs.toFixed(1)} lbs\n`;
     }
 
     text += '\n';
@@ -346,7 +346,7 @@ export function formatSummaryForContext(summary: DataSummary): string {
     text += 'Daily Averages:\n';
     
     if (summary.averages.steps) text += `  Steps: ${Math.round(summary.averages.steps).toLocaleString()}\n`;
-    if (summary.averages.distance_km) text += `  Distance: ${summary.averages.distance_km.toFixed(2)} km\n`;
+    if (summary.averages.distance_mi) text += `  Distance: ${summary.averages.distance_mi.toFixed(2)} miles\n`;
     if (summary.averages.active_calories) text += `  Active Calories: ${Math.round(summary.averages.active_calories)} kcal\n`;
     if (summary.averages.exercise_minutes) text += `  Exercise: ${Math.round(summary.averages.exercise_minutes)} minutes\n`;
     if (summary.averages.avg_heart_rate) text += `  Avg Heart Rate: ${Math.round(summary.averages.avg_heart_rate)} bpm\n`;
@@ -355,7 +355,7 @@ export function formatSummaryForContext(summary: DataSummary): string {
     if (summary.averages.sleep_hours) text += `  Sleep: ${summary.averages.sleep_hours.toFixed(1)} hours\n`;
     if (summary.averages.calories_consumed) text += `  Calories Consumed: ${Math.round(summary.averages.calories_consumed)} kcal\n`;
     if (summary.averages.protein_g) text += `  Protein: ${Math.round(summary.averages.protein_g)}g\n`;
-    if (summary.averages.water_ml) text += `  Water: ${Math.round(summary.averages.water_ml)} ml\n`;
+    if (summary.averages.water_oz) text += `  Water: ${Math.round(summary.averages.water_oz)} oz\n`;
     
     text += '\n';
   }
@@ -364,7 +364,7 @@ export function formatSummaryForContext(summary: DataSummary): string {
     text += 'Totals:\n';
     
     if (summary.totals.steps) text += `  Total Steps: ${Math.round(summary.totals.steps).toLocaleString()}\n`;
-    if (summary.totals.distance_km) text += `  Total Distance: ${summary.totals.distance_km.toFixed(2)} km\n`;
+    if (summary.totals.distance_mi) text += `  Total Distance: ${summary.totals.distance_mi.toFixed(2)} miles\n`;
     if (summary.totals.active_calories) text += `  Total Active Calories: ${Math.round(summary.totals.active_calories)} kcal\n`;
     if (summary.totals.exercise_minutes) text += `  Total Exercise: ${Math.round(summary.totals.exercise_minutes)} minutes\n`;
     if (summary.totals.workout_count) text += `  Total Workouts: ${summary.totals.workout_count}\n`;
@@ -375,8 +375,7 @@ export function formatSummaryForContext(summary: DataSummary): string {
   }
 
   if (summary.latestWeight) {
-    const weightLbs = summary.latestWeight * 2.20462;
-    text += `Current Weight: ${weightLbs.toFixed(1)} lbs (${summary.latestWeight.toFixed(1)} kg)\n\n`;
+    text += `Current Weight: ${summary.latestWeight.toFixed(1)} lbs\n\n`;
   }
 
   if (Object.keys(summary.events).length > 0) {
@@ -436,6 +435,10 @@ export async function getUploadedFileData(
     console.log('[HealthDataRetrieval-getUploadedFileData] ===== QUERYING UPLOADED FILE DATA =====');
     console.log('[HealthDataRetrieval-getUploadedFileData] Full userId:', userId);
     console.log('[HealthDataRetrieval-getUploadedFileData] UserId type:', typeof userId);
+    console.log('[HealthDataRetrieval-getUploadedFileData] Date range:', {
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+    });
     console.log('[HealthDataRetrieval-getUploadedFileData] =======================================');
     
     const startDateStr = startDate.toISOString().split('T')[0];
@@ -446,10 +449,18 @@ export async function getUploadedFileData(
       .select('id, file_name, extracted_data, data_categories, summary, date_range_start, date_range_end, upload_date')
       .eq('user_id', userId);
 
-    // Filter by date range if the file has date information
-    // Include files where the date range overlaps with our query range
+    // For uploaded files (especially lab results), we use a more lenient date filter
+    // Include files where:
+    // 1. date_range_start is null (no date info) - always include
+    // 2. date_range overlaps with query range
+    // 3. OR file was uploaded recently (within 6 months of query end date)
+    //    This ensures recent uploads are included even if the data is older
+    const sixMonthsAgo = new Date(endDate);
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const sixMonthsAgoStr = sixMonthsAgo.toISOString().split('T')[0];
+
     query = query.or(
-      `date_range_start.is.null,and(date_range_start.lte.${endDateStr},date_range_end.gte.${startDateStr})`
+      `date_range_start.is.null,and(date_range_start.lte.${endDateStr},date_range_end.gte.${startDateStr}),upload_date.gte.${sixMonthsAgoStr}`
     );
 
     // Filter by categories if specified
@@ -468,6 +479,15 @@ export async function getUploadedFileData(
     }
 
     console.log('[HealthDataRetrieval-getUploadedFileData] Successfully retrieved', data?.length || 0, 'uploaded files for userId:', userId);
+    
+    // Log details about what was retrieved
+    if (data && data.length > 0) {
+      console.log('[HealthDataRetrieval-getUploadedFileData] File details:');
+      data.forEach((file: any) => {
+        console.log(`  - ${file.file_name}: categories=${file.data_categories}, date_range=${file.date_range_start} to ${file.date_range_end}, entries=${file.extracted_data?.entries?.length || 0}`);
+      });
+    }
+    
     return { success: true, data: data || [] };
   } catch (error: any) {
     console.error('[HealthDataRetrieval] Exception in getUploadedFileData:', error);
@@ -500,14 +520,13 @@ export function formatUploadedDataForContext(uploadedFiles: any[]): string {
       text += `Date Range: ${file.date_range_start} to ${file.date_range_end}\n`;
     }
     
-    // Include extracted data entries
+    // Include extracted data entries (all entries, no cap)
     const extractedData = file.extracted_data;
     if (extractedData && extractedData.entries && extractedData.entries.length > 0) {
       text += `Data Entries (${extractedData.entries.length}):\n`;
       
-      // Show up to 10 entries per file
-      const entriesToShow = extractedData.entries.slice(0, 10);
-      entriesToShow.forEach((entry: any, index: number) => {
+      // Show all entries from the file
+      extractedData.entries.forEach((entry: any, index: number) => {
         if (entry.date) {
           text += `  ${entry.date}: `;
         } else {
@@ -527,10 +546,6 @@ export function formatUploadedDataForContext(uploadedFiles: any[]): string {
         
         text += '\n';
       });
-      
-      if (extractedData.entries.length > 10) {
-        text += `  ... and ${extractedData.entries.length - 10} more entries\n`;
-      }
     }
     
     text += '\n';

@@ -169,7 +169,7 @@ export function extractMetrics(query: string): string[] {
   // Metric mappings: natural language -> database column
   const metricPatterns: { [key: string]: RegExp } = {
     steps: /\b(steps?|walking|walked)\b/,
-    distance_km: /\b(distance|miles?|kilometers?|km)\b/,
+    distance_mi: /\b(distance|miles?|mi)\b/,
     active_calories: /\b(active calories|calories burned|energy)\b/,
     resting_calories: /\b(resting calories|basal|bmr)\b/,
     exercise_minutes: /\b(exercise|active minutes?|activity time|workout time)\b/,
@@ -178,12 +178,12 @@ export function extractMetrics(query: string): string[] {
     resting_heart_rate: /\b(resting heart rate|resting hr|rhr)\b/,
     heart_rate_variability: /\b(hrv|heart rate variability|variability)\b/,
     sleep_hours: /\b(sleep|slept|sleeping|rest)\b/,
-    weight_kg: /\b(weight|weigh|pounds?|lbs?|kg|kilograms?)\b/,
+    weight_lbs: /\b(weight|weigh|pounds?|lbs?)\b/,
     protein_g: /\b(protein)\b/,
     carbs_g: /\b(carbs?|carbohydrates?)\b/,
     fat_g: /\b(fat|fats)\b/,
     calories_consumed: /\b(calories consumed|ate|eaten|food|nutrition|diet)\b/,
-    water_ml: /\b(water|hydration|fluid)\b/,
+    water_oz: /\b(water|hydration|fluid|ounces?|oz)\b/,
     workout_count: /\b(workouts?|training sessions?|exercises?)\b/,
     total_workout_minutes: /\b(workout minutes|training time|exercise duration)\b/,
     strength_sessions: /\b(strength|weights?|lifting|resistance)\b/,
@@ -212,6 +212,13 @@ export function needsHealthData(query: string): boolean {
     'steps', 'sleep', 'heart rate', 'calories', 'weight', 'exercise',
     'workout', 'distance', 'activity', 'nutrition', 'protein', 'carbs',
     'water', 'hydration', 'hrv', 'variability', 'flights', 'stairs',
+    
+    // Lab work and medical tests
+    'blood work', 'bloodwork', 'lab results', 'lab test', 'labs', 'test results',
+    'cholesterol', 'glucose', 'a1c', 'hemoglobin', 'thyroid', 'tsh', 'vitamin',
+    'lipid', 'metabolic', 'cbc', 'cmp', 'bmp', 'panel', 'biomarker', 'biomarkers',
+    'testosterone', 'estrogen', 'hormone', 'cortisol', 'ferritin', 'iron',
+    'kidney', 'liver', 'creatinine', 'bun', 'alt', 'ast', 'egfr',
     
     // Questions about data
     'how much', 'how many', 'how long', 'how often',

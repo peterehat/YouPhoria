@@ -163,10 +163,10 @@ export async function getDailyMetrics(userId, startDate, endDate, options = {}) 
     let selectFields = '*';
     if (!includeDataSources) {
       selectFields = `
-        date, steps, distance_km, active_calories, resting_calories,
+        date, steps, distance_mi, active_calories, resting_calories,
         exercise_minutes, flights_climbed, avg_heart_rate, resting_heart_rate,
-        heart_rate_variability, sleep_hours, weight_kg, protein_g, carbs_g,
-        fat_g, calories_consumed, water_ml, workout_count, total_workout_minutes,
+        heart_rate_variability, sleep_hours, weight_lbs, protein_g, carbs_g,
+        fat_g, calories_consumed, water_oz, workout_count, total_workout_minutes,
         strength_sessions, cardio_sessions, data_completeness_score
       `;
     }
@@ -368,7 +368,7 @@ export async function getDataSummary(userId, startDate, endDate) {
     
     if (metrics.length > 0) {
       // Calculate averages
-      const sumFields = ['steps', 'distance_km', 'active_calories', 'exercise_minutes',
+      const sumFields = ['steps', 'distance_mi', 'active_calories', 'exercise_minutes',
         'avg_heart_rate', 'sleep_hours', 'calories_consumed', 'protein_g', 'carbs_g', 'fat_g'];
       
       sumFields.forEach(field => {
@@ -380,7 +380,7 @@ export async function getDataSummary(userId, startDate, endDate) {
       });
       
       // Calculate totals
-      const totalFields = ['steps', 'distance_km', 'active_calories', 'exercise_minutes',
+      const totalFields = ['steps', 'distance_mi', 'active_calories', 'exercise_minutes',
         'workout_count', 'strength_sessions', 'cardio_sessions'];
       
       totalFields.forEach(field => {
@@ -391,9 +391,9 @@ export async function getDataSummary(userId, startDate, endDate) {
       });
       
       // Get latest weight
-      const latestWithWeight = metrics.find(m => m.weight_kg != null);
+      const latestWithWeight = metrics.find(m => m.weight_lbs != null);
       if (latestWithWeight) {
-        summary.latestWeight = latestWithWeight.weight_kg;
+        summary.latestWeight = latestWithWeight.weight_lbs;
       }
     }
     
@@ -572,7 +572,7 @@ function formatDailyMetricsForRAG(metrics, maxChunkSize) {
     
     // Activity
     if (day.steps) dayText += `Steps: ${day.steps}\n`;
-    if (day.distance_km) dayText += `Distance: ${day.distance_km} km\n`;
+    if (day.distance_mi) dayText += `Distance: ${day.distance_mi} mi\n`;
     if (day.active_calories) dayText += `Active Calories: ${day.active_calories} kcal\n`;
     if (day.exercise_minutes) dayText += `Exercise: ${day.exercise_minutes} minutes\n`;
     
