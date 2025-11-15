@@ -344,8 +344,6 @@ export default function AppsScreen() {
 
     setIsLoading(true);
     try {
-      console.log('[AppsScreen] Fetching health data...');
-      
       // Check if HealthKit is initialized
       if (!HealthKitService.isInitialized) {
         console.log('[AppsScreen] HealthKit not initialized, initializing now...');
@@ -354,7 +352,31 @@ export default function AppsScreen() {
           throw new Error('HealthKit initialization failed');
         }
       }
+
+      // Check if we need to sync (last sync > 1 hour ago)
+      const lastSync = await HealthKitService.getLastSyncTime();
+      const now = new Date();
+      const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+
+      if (!lastSync || lastSync < oneHourAgo) {
+        console.log('[AppsScreen] Last sync was more than 1 hour ago, syncing data...');
+        
+        // Sync last 7 days of data
+        const syncResult = await HealthKitService.syncHealthData(7);
+        
+        if (syncResult.success) {
+          // Update last sync time in state
+          const updatedLastSync = await HealthKitService.getLastSyncTime();
+          setLastSyncTime(updatedLastSync);
+          console.log(`[AppsScreen] Sync complete: ${syncResult.synced} days synced`);
+        } else {
+          console.warn('[AppsScreen] Sync failed, but continuing to show data:', syncResult.error);
+        }
+      } else {
+        console.log('[AppsScreen] Data is up to date, skipping sync');
+      }
       
+      console.log('[AppsScreen] Fetching health data...');
       const data = await HealthKitService.getHealthData();
       console.log('[AppsScreen] Health data fetched:', data ? 'success' : 'no data');
       

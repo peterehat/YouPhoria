@@ -35,7 +35,20 @@ export const chatController = {
 
       const { conversationId, message, userId } = req.body;
 
+      // Log userId for troubleshooting
+      console.log('[ChatController] ===== RECEIVED MESSAGE REQUEST =====');
+      console.log('[ChatController] Full userId from request body:', userId);
+      console.log('[ChatController] UserId type:', typeof userId);
+      console.log('[ChatController] UserId length:', userId?.length);
+      console.log('[ChatController] Request details:', {
+        conversationId,
+        messageLength: message?.length,
+        messagePreview: message?.substring(0, 100),
+      });
+      console.log('[ChatController] ====================================');
+
       if (!message || !userId) {
+        console.error('[ChatController] Missing required fields:', { hasMessage: !!message, hasUserId: !!userId });
         return res.status(400).json({
           success: false,
           error: 'Message and userId are required',
@@ -123,7 +136,12 @@ export const chatController = {
         : [];
 
       // RAG: Retrieve health data context based on the user's query
-      console.log('[Chat] Retrieving health context via RAG...');
+      console.log('[ChatController] ===== CALLING RAG SERVICE =====');
+      console.log('[ChatController] UserId being passed to RAG:', userId);
+      console.log('[ChatController] UserId type:', typeof userId);
+      console.log('[ChatController] Message:', message.substring(0, 100));
+      console.log('[ChatController] =================================');
+      
       const ragResult = await retrieveHealthContext(supabase, genAI, userId, message);
       
       if (!ragResult.success) {
@@ -142,7 +160,9 @@ export const chatController = {
       
 Be conversational, empathetic, and supportive. Provide actionable advice when appropriate, but always remind users to consult healthcare professionals for medical decisions.
 
-When discussing health metrics, be specific and reference actual data when available. If you don't have specific data, ask clarifying questions to better understand the user's situation.`;
+When discussing health metrics, be specific and reference actual data when available. If you don't have specific data, ask clarifying questions to better understand the user's situation.
+
+IMPORTANT: When displaying weight data to users, always use pounds (lbs) as the primary unit, as most users prefer imperial units. You may include kg in parentheses if helpful, but lead with lbs.`;
 
       // Build the complete prompt with RAG context
       const fullPrompt = buildPromptWithContext(
@@ -380,6 +400,66 @@ When discussing health metrics, be specific and reference actual data when avail
       res.status(500).json({
         success: false,
         error: 'Failed to create conversation',
+      });
+    }
+  },
+
+  /**
+   * Update a conversation (e.g., rename)
+   * PATCH /api/v1/chat/conversations/:id
+   */
+  async updateConversation(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { userId, title } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          error: 'userId is required',
+        });
+      }
+
+      if (!title) {
+        return res.status(400).json({
+          success: false,
+          error: 'title is required',
+        });
+      }
+
+      const { data: conversation, error } = await supabase
+        .from('chat_conversations')
+        .update({ title })
+        .eq('id', id)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating conversation:', error);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to update conversation',
+        });
+      }
+
+      if (!conversation) {
+        return res.status(404).json({
+          success: false,
+          error: 'Conversation not found',
+        });
+      }
+
+      res.json({
+        success: true,
+        conversation,
+        message: 'Conversation updated successfully',
+      });
+    } catch (error) {
+      console.error('Error in updateConversation:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update conversation',
       });
     }
   },

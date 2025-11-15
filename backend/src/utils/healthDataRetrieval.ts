@@ -66,6 +66,15 @@ export async function getDailyMetrics(
   endDate: Date
 ): Promise<{ success: boolean; data: DailyMetric[]; error?: string }> {
   try {
+    console.log('[HealthDataRetrieval-getDailyMetrics] ===== QUERYING DAILY METRICS =====');
+    console.log('[HealthDataRetrieval-getDailyMetrics] Full userId:', userId);
+    console.log('[HealthDataRetrieval-getDailyMetrics] UserId type:', typeof userId);
+    console.log('[HealthDataRetrieval-getDailyMetrics] Date range:', {
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+    });
+    console.log('[HealthDataRetrieval-getDailyMetrics] ===================================');
+    
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
@@ -78,10 +87,12 @@ export async function getDailyMetrics(
       .order('date', { ascending: true });
 
     if (error) {
-      console.error('[HealthDataRetrieval] Error fetching daily metrics:', error);
+      console.error('[HealthDataRetrieval-getDailyMetrics] Error fetching daily metrics:', error);
+      console.error('[HealthDataRetrieval-getDailyMetrics] Error occurred with userId:', userId);
       return { success: false, data: [], error: error.message };
     }
 
+    console.log('[HealthDataRetrieval-getDailyMetrics] Successfully retrieved', data?.length || 0, 'daily metrics for userId:', userId);
     return { success: true, data: data || [] };
   } catch (error: any) {
     console.error('[HealthDataRetrieval] Exception in getDailyMetrics:', error);
@@ -100,6 +111,11 @@ export async function getHealthEvents(
   eventTypes?: string[]
 ): Promise<{ success: boolean; data: HealthEvent[]; error?: string }> {
   try {
+    console.log('[HealthDataRetrieval-getHealthEvents] ===== QUERYING HEALTH EVENTS =====');
+    console.log('[HealthDataRetrieval-getHealthEvents] Full userId:', userId);
+    console.log('[HealthDataRetrieval-getHealthEvents] UserId type:', typeof userId);
+    console.log('[HealthDataRetrieval-getHealthEvents] ===================================');
+    
     let query = supabase
       .from('health_events')
       .select('id, event_type, start_time, end_time, duration_seconds, title, description, source_app, metrics')
@@ -115,10 +131,12 @@ export async function getHealthEvents(
     const { data, error } = await query;
 
     if (error) {
-      console.error('[HealthDataRetrieval] Error fetching health events:', error);
+      console.error('[HealthDataRetrieval-getHealthEvents] Error fetching health events:', error);
+      console.error('[HealthDataRetrieval-getHealthEvents] Error occurred with userId:', userId);
       return { success: false, data: [], error: error.message };
     }
 
+    console.log('[HealthDataRetrieval-getHealthEvents] Successfully retrieved', data?.length || 0, 'health events for userId:', userId);
     return { success: true, data: data || [] };
   } catch (error: any) {
     console.error('[HealthDataRetrieval] Exception in getHealthEvents:', error);
@@ -136,6 +154,11 @@ export async function getDataSummary(
   endDate: Date
 ): Promise<{ success: boolean; summary?: DataSummary; error?: string }> {
   try {
+    console.log('[HealthDataRetrieval-getDataSummary] ===== GETTING DATA SUMMARY =====');
+    console.log('[HealthDataRetrieval-getDataSummary] Full userId:', userId);
+    console.log('[HealthDataRetrieval-getDataSummary] UserId type:', typeof userId);
+    console.log('[HealthDataRetrieval-getDataSummary] =================================');
+    
     // Get daily metrics
     const dailyMetricsResult = await getDailyMetrics(supabase, userId, startDate, endDate);
     
@@ -146,6 +169,7 @@ export async function getDataSummary(
     const metrics = dailyMetricsResult.data;
 
     // Get event counts by type
+    console.log('[HealthDataRetrieval-getDataSummary] Querying event counts for userId:', userId);
     const { data: eventCounts, error: evError } = await supabase
       .from('health_events')
       .select('event_type')
@@ -232,6 +256,12 @@ export async function getMetricTimeSeries(
   endDate: Date
 ): Promise<{ success: boolean; data: any[]; error?: string }> {
   try {
+    console.log('[HealthDataRetrieval-getMetricTimeSeries] ===== QUERYING METRIC TIME SERIES =====');
+    console.log('[HealthDataRetrieval-getMetricTimeSeries] Full userId:', userId);
+    console.log('[HealthDataRetrieval-getMetricTimeSeries] UserId type:', typeof userId);
+    console.log('[HealthDataRetrieval-getMetricTimeSeries] Metric type:', metricType);
+    console.log('[HealthDataRetrieval-getMetricTimeSeries] =======================================');
+    
     const { data, error } = await supabase
       .from('health_data')
       .select('recorded_at, value, unit, source_app, metadata')
@@ -243,10 +273,12 @@ export async function getMetricTimeSeries(
       .order('recorded_at', { ascending: true });
 
     if (error) {
-      console.error('[HealthDataRetrieval] Error fetching time-series data:', error);
+      console.error('[HealthDataRetrieval-getMetricTimeSeries] Error fetching time-series data:', error);
+      console.error('[HealthDataRetrieval-getMetricTimeSeries] Error occurred with userId:', userId);
       return { success: false, data: [], error: error.message };
     }
 
+    console.log('[HealthDataRetrieval-getMetricTimeSeries] Successfully retrieved', data?.length || 0, 'time-series records for userId:', userId);
     return { success: true, data: data || [] };
   } catch (error: any) {
     console.error('[HealthDataRetrieval] Exception in getMetricTimeSeries:', error);
@@ -290,8 +322,11 @@ export function formatDailyMetricsForContext(metrics: DailyMetric[]): string {
     // Workouts
     if (day.workout_count) text += `  Workouts: ${day.workout_count}\n`;
 
-    // Weight
-    if (day.weight_kg) text += `  Weight: ${day.weight_kg.toFixed(1)} kg\n`;
+    // Weight (convert to lbs for US users)
+    if (day.weight_kg) {
+      const weightLbs = day.weight_kg * 2.20462;
+      text += `  Weight: ${weightLbs.toFixed(1)} lbs (${day.weight_kg.toFixed(1)} kg)\n`;
+    }
 
     text += '\n';
   });
@@ -340,7 +375,8 @@ export function formatSummaryForContext(summary: DataSummary): string {
   }
 
   if (summary.latestWeight) {
-    text += `Current Weight: ${summary.latestWeight.toFixed(1)} kg\n\n`;
+    const weightLbs = summary.latestWeight * 2.20462;
+    text += `Current Weight: ${weightLbs.toFixed(1)} lbs (${summary.latestWeight.toFixed(1)} kg)\n\n`;
   }
 
   if (Object.keys(summary.events).length > 0) {
@@ -397,6 +433,11 @@ export async function getUploadedFileData(
   categories?: string[]
 ): Promise<{ success: boolean; data: any[]; error?: string }> {
   try {
+    console.log('[HealthDataRetrieval-getUploadedFileData] ===== QUERYING UPLOADED FILE DATA =====');
+    console.log('[HealthDataRetrieval-getUploadedFileData] Full userId:', userId);
+    console.log('[HealthDataRetrieval-getUploadedFileData] UserId type:', typeof userId);
+    console.log('[HealthDataRetrieval-getUploadedFileData] =======================================');
+    
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
@@ -421,10 +462,12 @@ export async function getUploadedFileData(
     const { data, error } = await query;
 
     if (error) {
-      console.error('[HealthDataRetrieval] Error fetching uploaded file data:', error);
+      console.error('[HealthDataRetrieval-getUploadedFileData] Error fetching uploaded file data:', error);
+      console.error('[HealthDataRetrieval-getUploadedFileData] Error occurred with userId:', userId);
       return { success: false, data: [], error: error.message };
     }
 
+    console.log('[HealthDataRetrieval-getUploadedFileData] Successfully retrieved', data?.length || 0, 'uploaded files for userId:', userId);
     return { success: true, data: data || [] };
   } catch (error: any) {
     console.error('[HealthDataRetrieval] Exception in getUploadedFileData:', error);

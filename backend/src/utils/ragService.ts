@@ -53,6 +53,13 @@ export async function retrieveHealthContext(
   query: string
 ): Promise<RAGResult> {
   try {
+    console.log('[RAG] ===== RETRIEVING HEALTH CONTEXT =====');
+    console.log('[RAG] Full userId received:', userId);
+    console.log('[RAG] UserId type:', typeof userId);
+    console.log('[RAG] UserId length:', userId?.length);
+    console.log('[RAG] Query:', query.substring(0, 100));
+    console.log('[RAG] =====================================');
+    
     console.log('[RAG] Analyzing query:', query);
 
     // Step 1: Analyze the query using local pattern matching
@@ -106,6 +113,11 @@ export async function retrieveHealthContext(
     });
 
     // Step 4: Retrieve health data based on analysis
+    console.log('[RAG] ===== CALLING RETRIEVE HEALTH DATA =====');
+    console.log('[RAG] UserId being passed to retrieveHealthData:', userId);
+    console.log('[RAG] Time range:', timeRange.description);
+    console.log('[RAG] =========================================');
+    
     const healthContext = await retrieveHealthData(
       supabase,
       userId,
@@ -240,6 +252,16 @@ async function retrieveHealthData(
   error?: string;
 }> {
   try {
+    console.log('[RAG-retrieveHealthData] ===== RETRIEVING HEALTH DATA =====');
+    console.log('[RAG-retrieveHealthData] Full userId:', userId);
+    console.log('[RAG-retrieveHealthData] UserId type:', typeof userId);
+    console.log('[RAG-retrieveHealthData] Date range:', {
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+    });
+    console.log('[RAG-retrieveHealthData] Metrics requested:', metrics);
+    console.log('[RAG-retrieveHealthData] ===================================');
+    
     const dataTypes: string[] = [];
     let formattedContext = '';
 

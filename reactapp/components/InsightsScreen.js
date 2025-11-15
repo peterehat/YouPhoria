@@ -11,13 +11,15 @@ import {
   Alert,
   ActionSheetIOS,
   ActivityIndicator,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import Background from './Background';
 import ChatOverlay from './ChatOverlay';
-import { getConversations, deleteConversation } from '../services/chatService';
+import { getConversations, deleteConversation, updateConversation } from '../services/chatService';
 import { uploadFile } from '../services/uploadService';
 import { API_BASE_URL, isProduction, isLocalhost } from '../config/api';
 import useAuthStore from '../store/authStore';
@@ -28,6 +30,9 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
   const [isUploading, setIsUploading] = useState(false);
   const [showChatOverlay, setShowChatOverlay] = useState(false);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [renameConversation, setRenameConversation] = useState(null);
+  const [renameText, setRenameText] = useState('');
   const { user } = useAuthStore();
 
   useEffect(() => {
@@ -155,17 +160,82 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
     loadConversations();
   };
 
+  const handleRenameConversation = (conversation) => {
+    if (Platform.OS === 'ios') {
+      // iOS has Alert.prompt
+      Alert.prompt(
+        'Rename Conversation',
+        'Enter a new name for this conversation',
+        [
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+          {
+            text: 'Rename',
+            onPress: async (newTitle) => {
+              if (!newTitle || newTitle.trim() === '') {
+                Alert.alert('Error', 'Please enter a valid name');
+                return;
+              }
+              const result = await updateConversation(conversation.id, user.id, newTitle.trim());
+              if (result.success) {
+                loadConversations();
+              } else {
+                Alert.alert('Error', 'Failed to rename conversation');
+              }
+            },
+          },
+        ],
+        'plain-text',
+        conversation.title
+      );
+    } else {
+      // Android - use custom modal
+      setRenameConversation(conversation);
+      setRenameText(conversation.title);
+      setShowRenameModal(true);
+    }
+  };
+
+  const handleRenameSubmit = async () => {
+    if (!renameText || renameText.trim() === '') {
+      Alert.alert('Error', 'Please enter a valid name');
+      return;
+    }
+    
+    const result = await updateConversation(renameConversation.id, user.id, renameText.trim());
+    if (result.success) {
+      setShowRenameModal(false);
+      setRenameConversation(null);
+      setRenameText('');
+      loadConversations();
+    } else {
+      Alert.alert('Error', 'Failed to rename conversation');
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setShowRenameModal(false);
+    setRenameConversation(null);
+    setRenameText('');
+  };
+
   const handleLongPress = (conversation) => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['Cancel', 'Delete Conversation'],
-          destructiveButtonIndex: 1,
+          options: ['Cancel', 'Rename Conversation', 'Delete Conversation'],
+          destructiveButtonIndex: 2,
           cancelButtonIndex: 0,
           title: conversation.title,
         },
         async (buttonIndex) => {
           if (buttonIndex === 1) {
+            // Rename
+            handleRenameConversation(conversation);
+          } else if (buttonIndex === 2) {
+            // Delete
             const result = await deleteConversation(conversation.id, user.id);
             if (result.success) {
               loadConversations();
@@ -176,26 +246,46 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
         }
       );
     } else {
-      // Android fallback
+      // Android fallback - show options menu
       Alert.alert(
-        'Delete Conversation',
-        `Are you sure you want to delete "${conversation.title}"?`,
+        conversation.title,
+        'Choose an action',
         [
           {
-            text: 'Cancel',
-            style: 'cancel',
+            text: 'Rename',
+            onPress: () => handleRenameConversation(conversation),
           },
           {
             text: 'Delete',
             style: 'destructive',
-            onPress: async () => {
-              const result = await deleteConversation(conversation.id, user.id);
-              if (result.success) {
-                loadConversations();
-              } else {
-                Alert.alert('Error', 'Failed to delete conversation');
-              }
+            onPress: () => {
+              Alert.alert(
+                'Delete Conversation',
+                `Are you sure you want to delete "${conversation.title}"?`,
+                [
+                  {
+                    text: 'Cancel',
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                      const result = await deleteConversation(conversation.id, user.id);
+                      if (result.success) {
+                        loadConversations();
+                      } else {
+                        Alert.alert('Error', 'Failed to delete conversation');
+                      }
+                    },
+                  },
+                ]
+              );
             },
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
           },
         ]
       );
@@ -370,6 +460,51 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
         onClose={handleCloseChatOverlay}
         conversationId={selectedConversationId}
       />
+
+      {/* Rename Modal (Android) */}
+      <Modal
+        visible={showRenameModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleRenameCancel}
+      >
+        <View style={styles.renameModalBackdrop}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <BlurView intensity={100} tint="dark" style={styles.renameModalContainer}>
+              <View style={styles.renameModalContent}>
+                <Text style={styles.renameModalTitle}>Rename Conversation</Text>
+                <TextInput
+                  style={styles.renameModalInput}
+                  value={renameText}
+                  onChangeText={setRenameText}
+                  placeholder="Enter new name"
+                  placeholderTextColor="rgba(255, 255, 255, 0.5)"
+                  autoFocus={true}
+                  selectTextOnFocus={true}
+                />
+                <View style={styles.renameModalButtons}>
+                  <TouchableOpacity
+                    style={[styles.renameModalButton, styles.renameModalCancelButton]}
+                    onPress={handleRenameCancel}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.renameModalButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.renameModalButton, styles.renameModalSubmitButton]}
+                    onPress={handleRenameSubmit}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.renameModalButtonText, styles.renameModalSubmitButtonText]}>Rename</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </BlurView>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -655,5 +790,68 @@ const styles = StyleSheet.create({
     color: '#fff',
     flex: 1,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  renameModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  renameModalContainer: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  renameModalContent: {
+    padding: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  renameModalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  renameModalInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#fff',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  renameModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  renameModalButton: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  renameModalCancelButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  renameModalSubmitButton: {
+    backgroundColor: '#eaff61',
+  },
+  renameModalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  renameModalSubmitButtonText: {
+    color: '#000',
   },
 });

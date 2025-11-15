@@ -268,6 +268,14 @@ export default function ChatOverlay({
     }, 100);
 
     // Send to backend
+    console.log('[ChatOverlay] ===== SENDING MESSAGE TO BACKEND =====');
+    console.log('[ChatOverlay] Current user from authStore:', user);
+    console.log('[ChatOverlay] User ID being sent:', user?.id);
+    console.log('[ChatOverlay] User ID type:', typeof user?.id);
+    console.log('[ChatOverlay] Conversation ID:', currentConversationId);
+    console.log('[ChatOverlay] Message:', textToSend.substring(0, 100));
+    console.log('[ChatOverlay] =======================================');
+    
     const result = await sendMessage(currentConversationId, textToSend, user.id);
 
     setIsLoading(false);
@@ -721,7 +729,7 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingLeft: 12,
     paddingRight: 12,
     paddingTop: 12,
@@ -743,9 +751,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     maxHeight: 100,
-    paddingVertical: 0,
+    paddingVertical: 8,
     paddingHorizontal: 4,
-    paddingTop: 2,
   },
   sendButton: {
     width: 36,

@@ -15,6 +15,9 @@ chatRouter.get('/conversations/:id', chatController.getConversation);
 // Create a new conversation
 chatRouter.post('/conversations', chatController.createConversation);
 
+// Update a conversation (e.g., rename)
+chatRouter.patch('/conversations/:id', chatController.updateConversation);
+
 // Delete a conversation
 chatRouter.delete('/conversations/:id', chatController.deleteConversation);
 

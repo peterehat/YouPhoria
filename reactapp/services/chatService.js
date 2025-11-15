@@ -80,12 +80,18 @@ async function getAuthHeaders() {
  */
 export async function sendMessage(conversationId, message, userId) {
   try {
-    console.log('[ChatService] Sending message:', {
+    // Log full userId for troubleshooting
+    console.log('[ChatService] ===== SENDING MESSAGE =====');
+    console.log('[ChatService] Full userId:', userId);
+    console.log('[ChatService] UserId type:', typeof userId);
+    console.log('[ChatService] UserId length:', userId?.length);
+    console.log('[ChatService] Message details:', {
       conversationId,
       messageLength: message?.length,
-      userId: userId?.substring(0, 8) + '...',
+      messagePreview: message?.substring(0, 100),
       apiUrl: API_BASE_URL,
     });
+    console.log('[ChatService] ===========================');
 
     const headers = await getAuthHeaders();
     
@@ -265,6 +271,47 @@ export async function createConversation(userId, title) {
     };
   } catch (error) {
     console.error('[ChatService] Error creating conversation:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * Update a conversation (e.g., rename)
+ * 
+ * @param {string} conversationId - Conversation ID
+ * @param {string} userId - User ID
+ * @param {string} title - New title for the conversation
+ * @returns {Promise<object>} Updated conversation
+ */
+export async function updateConversation(conversationId, userId, title) {
+  try {
+    const headers = await getAuthHeaders();
+    
+    const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({
+        userId,
+        title,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to update conversation');
+    }
+
+    return {
+      success: true,
+      conversation: data.conversation,
+      message: data.message,
+    };
+  } catch (error) {
+    console.error('[ChatService] Error updating conversation:', error);
     return {
       success: false,
       error: error.message,
