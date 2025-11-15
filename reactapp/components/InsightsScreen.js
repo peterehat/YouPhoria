@@ -82,6 +82,8 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
     }
     
     console.log('[InsightsScreen] Loading conversations for user:', user.id);
+    console.log('[InsightsScreen] User email:', user.email);
+    console.log('[InsightsScreen] Full user object:', JSON.stringify(user, null, 2));
     
     // Only set refresh state if this is a pull-to-refresh action
     if (isRefreshAction) {
@@ -95,6 +97,7 @@ export default function InsightsScreen({ onOpenOnboarding = () => {} }) {
     
     if (result.success) {
       console.log('[InsightsScreen] Setting conversations:', result.conversations.length);
+      console.log('[InsightsScreen] Conversation titles:', result.conversations.map(c => c.title));
       setConversations(result.conversations);
       
       // Reset animation flag when new conversations load
