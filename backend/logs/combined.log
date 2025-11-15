@@ -912,3 +912,293 @@
 {"duration":"409ms","ip":"::ffff:192.168.7.89","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T05:04:00.774Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
 {"ip":"::ffff:192.168.7.89","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T05:04:12.255Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
 {"duration":"145ms","ip":"::ffff:192.168.7.89","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T05:04:12.400Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.945Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.945Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.945Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.946Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.946Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.946Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.947Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.947Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.947Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.947Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.948Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.949Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.949Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.949Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:17:39.949Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:17:55.313Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:17:55.314Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:17:55.314Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:17:55.314Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:17:55.315Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:18:04.601Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:18:04.602Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:18:04.602Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:18:04.602Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:18:04.602Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:18:43.478Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:18:43.478Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:18:43.479Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:18:43.479Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:18:43.479Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:22:19.539Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:22:19.540Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:22:19.540Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:22:19.540Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:22:19.540Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:28:36.220Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:28:36.221Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:28:36.221Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:28:36.221Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:28:36.221Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T06:58:31.955Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T06:58:31.955Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T06:58:31.956Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T06:58:31.956Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T06:58:31.956Z"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T06:58:47.857Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"144ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T06:58:48.001Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T06:58:52.463Z","url":"/api/v1/chat/conversations/d06e4495-08b2-4b41-a52c-585e054552a4?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"253ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T06:58:52.716Z","url":"/api/v1/chat/conversations/d06e4495-08b2-4b41-a52c-585e054552a4?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T06:58:59.556Z","url":"/api/v1/chat/message","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"4897ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T06:59:04.453Z","url":"/api/v1/chat/message"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T06:59:39.770Z","url":"/api/v1/upload/file","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"1128ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":400,"timestamp":"2025-11-14T06:59:40.898Z","url":"/api/v1/upload/file"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:08:34.414Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:08:34.415Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:08:34.415Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:08:34.415Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:08:34.415Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:08:41.070Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:08:41.071Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:08:41.071Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:08:41.071Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:08:41.072Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:08:56.239Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:08:56.240Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:08:56.240Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:08:56.240Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:08:56.240Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:09:01.840Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:09:01.841Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:09:01.841Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:09:01.841Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:09:01.841Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:10:05.990Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:10:05.991Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:10:05.991Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:10:05.991Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:10:05.991Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:10:22.060Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:10:22.061Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:10:22.061Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:10:22.062Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:10:22.062Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:10:30.149Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:10:30.150Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:10:30.150Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:10:30.150Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:10:30.150Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:10:33.605Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:10:33.606Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:10:33.606Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:10:33.606Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:10:33.606Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:10:49.725Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:10:49.726Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:10:49.726Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:10:49.726Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:10:49.726Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:10:57.251Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:10:57.252Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:10:57.252Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:10:57.252Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:10:57.252Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:20:45.832Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:20:45.833Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:20:45.833Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:20:45.833Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:20:45.833Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:20:55.432Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:20:55.433Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:20:55.433Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:20:55.433Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:20:55.433Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:21:06.467Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:21:06.467Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:21:06.467Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:21:06.468Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:21:06.468Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:32:00.570Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:32:00.570Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:32:00.570Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:32:00.571Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:32:00.571Z"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:39:01.625Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"271ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T07:39:01.896Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:39:30.675Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"155ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T07:39:30.830Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T07:39:43.774Z","url":"/api/v1/upload/file","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"2273ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":500,"timestamp":"2025-11-14T07:39:46.047Z","url":"/api/v1/upload/file"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T07:42:42.219Z","url":"/api/v1/upload/file","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"2143ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":500,"timestamp":"2025-11-14T07:42:44.362Z","url":"/api/v1/upload/file"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:43:55.691Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"155ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T07:43:55.846Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:43:57.788Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"106ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T07:43:57.894Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:43:59.366Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"87ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T07:43:59.453Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:44:01.459Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"104ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T07:44:01.563Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:44:07.922Z","url":"/api/v1/chat/conversations/d06e4495-08b2-4b41-a52c-585e054552a4?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"269ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T07:44:08.191Z","url":"/api/v1/chat/conversations/d06e4495-08b2-4b41-a52c-585e054552a4?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:44:11.960Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"102ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T07:44:12.062Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T07:44:36.804Z","url":"/api/v1/upload/file","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"3896ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":500,"timestamp":"2025-11-14T07:44:40.700Z","url":"/api/v1/upload/file"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T07:54:26.259Z","url":"/api/v1/upload/file","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"2500ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T07:54:28.759Z","url":"/api/v1/upload/file"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:56:01.265Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:56:01.266Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:56:01.266Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:56:01.266Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:56:01.266Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:56:12.065Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:56:12.066Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:56:12.066Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:56:12.066Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:56:12.066Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:56:29.730Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:56:29.731Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:56:29.731Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:56:29.731Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:56:29.731Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-14T07:57:08.463Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-14T07:57:08.464Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-14T07:57:08.464Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-14T07:57:08.464Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-14T07:57:08.464Z"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:57:48.361Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"167ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T07:57:48.528Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T07:57:52.883Z","url":"/api/v1/upload/file","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"7714ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T07:58:00.598Z","url":"/api/v1/upload/file"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:58:20.394Z","url":"/api/v1/chat/conversations/d06e4495-08b2-4b41-a52c-585e054552a4?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"256ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T07:58:20.650Z","url":"/api/v1/chat/conversations/d06e4495-08b2-4b41-a52c-585e054552a4?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T07:58:22.545Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"108ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-14T07:58:22.653Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T08:01:12.506Z","url":"/api/v1/upload/file","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"2923ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T08:01:15.429Z","url":"/api/v1/upload/file"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-14T08:01:39.094Z","url":"/api/v1/chat/message","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"2169ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T08:01:41.263Z","url":"/api/v1/chat/message"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-14T08:02:05.040Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"182ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-14T08:02:05.222Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:22:41.413Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:22:41.414Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:22:41.414Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:22:41.414Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:22:41.415Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:22:49.132Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:22:49.133Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:22:49.133Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:22:49.133Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:22:49.133Z"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:22:57.843Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"351ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:22:58.194Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:23:07.331Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:23:15.664Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:23:15.665Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:23:15.665Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:23:15.665Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:23:15.665Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:23:20.682Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:23:20.682Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:23:20.683Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:23:20.683Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:23:20.683Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:24:31.293Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:24:31.294Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:24:31.294Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:24:31.294Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:24:31.294Z"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:36:35.422Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"372ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:36:35.794Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"PATCH","service":"youphoria-backend","timestamp":"2025-11-15T01:36:54.455Z","url":"/api/v1/chat/conversations/e9a27fab-c07d-437b-ad69-67f9a7381de3","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"113ms","ip":"::1","level":"info","message":"Request completed","method":"PATCH","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:36:54.568Z","url":"/api/v1/chat/conversations/e9a27fab-c07d-437b-ad69-67f9a7381de3"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:36:54.587Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"100ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:36:54.687Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:39:25.970Z","url":"/api/v1/chat/conversations/ef065fbd-8014-4c68-acb7-2285cda0f608?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"533ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:39:26.503Z","url":"/api/v1/chat/conversations/ef065fbd-8014-4c68-acb7-2285cda0f608?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:40:36.874Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"141ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-15T01:40:37.015Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:40:46.870Z","url":"/api/v1/chat/conversations/8f68fc18-844d-4688-8438-e04666a5a746?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"299ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:40:47.169Z","url":"/api/v1/chat/conversations/8f68fc18-844d-4688-8438-e04666a5a746?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-15T01:41:03.622Z","url":"/api/v1/chat/message","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"2727ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:41:06.349Z","url":"/api/v1/chat/message"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-15T01:41:26.240Z","url":"/api/v1/chat/message","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"4722ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:41:30.962Z","url":"/api/v1/chat/message"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:42:00.406Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"190ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:42:00.596Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T01:43:29.152Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"286ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":304,"timestamp":"2025-11-15T01:43:29.438Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:43:36.336Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:43:36.337Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:43:36.338Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:43:36.338Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:43:36.338Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:43:37.726Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:43:37.726Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:43:37.726Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:43:37.727Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:43:37.727Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:43:44.263Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:43:44.264Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:43:44.264Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:43:44.265Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:43:44.265Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:43:49.520Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:43:49.521Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:43:49.521Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:43:49.521Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:43:49.522Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:43:57.924Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:43:57.925Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:43:57.925Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:43:57.925Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:43:57.925Z"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-15T01:45:09.389Z","url":"/api/v1/chat/message","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"2895ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:45:12.284Z","url":"/api/v1/chat/message"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T01:47:06.138Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T01:47:06.139Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T01:47:06.139Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T01:47:06.139Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T01:47:06.139Z"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"POST","service":"youphoria-backend","timestamp":"2025-11-15T01:47:22.045Z","url":"/api/v1/chat/message","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"6463ms","ip":"::1","level":"info","message":"Request completed","method":"POST","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T01:47:28.508Z","url":"/api/v1/chat/message"}
+{"ip":"::1","level":"info","message":"Incoming request","method":"GET","service":"youphoria-backend","timestamp":"2025-11-15T02:06:15.393Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473","userAgent":"You-i/7 CFNetwork/3860.100.1 Darwin/25.0.0"}
+{"duration":"478ms","ip":"::1","level":"info","message":"Request completed","method":"GET","service":"youphoria-backend","statusCode":200,"timestamp":"2025-11-15T02:06:15.871Z","url":"/api/v1/chat/conversations?userId=90ecdf1e-ac7f-4ef4-978e-a01ef1d86473"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T02:06:40.569Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T02:06:40.570Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T02:06:40.570Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T02:06:40.570Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T02:06:40.571Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T02:06:53.342Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T02:06:53.343Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T02:06:53.343Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T02:06:53.343Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T02:06:53.344Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T02:07:10.567Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T02:07:10.568Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T02:07:10.568Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T02:07:10.568Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T02:07:10.569Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T02:07:24.592Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T02:07:24.593Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T02:07:24.593Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T02:07:24.594Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T02:07:24.594Z"}
+{"level":"info","message":"🚀 Server running on port 3000","service":"youphoria-backend","timestamp":"2025-11-15T02:07:48.616Z"}
+{"level":"info","message":"📝 Environment: development","service":"youphoria-backend","timestamp":"2025-11-15T02:07:48.617Z"}
+{"level":"info","message":"🔗 CORS origins: true","service":"youphoria-backend","timestamp":"2025-11-15T02:07:48.617Z"}
+{"level":"info","message":"","service":"youphoria-backend","timestamp":"2025-11-15T02:07:48.617Z"}
+{"level":"info","message":"✅ All required environment variables are set","service":"youphoria-backend","timestamp":"2025-11-15T02:07:48.617Z"}
